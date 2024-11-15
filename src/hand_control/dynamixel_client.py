@@ -541,8 +541,9 @@ class DynamixelClient:
             # Perform the sync read
             success = False
             while not success and retries >= 0:
-                with self.port_rlock:
-                    comm_result = sync_reader.fastSyncRead()
+                with self.port_rlock:                    
+                    comm_result = sync_reader.rxPacket()
+                    # comm_result = sync_reader.fastSyncRead()
                     success = self.handle_packet_result(comm_result, context="syncRead")
                 retries -= 1
 

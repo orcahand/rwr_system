@@ -1,0 +1,49 @@
+muscle_groups:
+
+  thumb: 
+    joint_ids: [1, 2, 3]  # [PIP, MCP, ABD]            
+    motor_ids: [1, 2, 3]          
+    spool_rad: [4.25, 4.25, 4.25] # Need to put the correct values 
+    wind_direction: [1, 1, 1] # Need to check for positive or negative values
+    joint_ranges: [[0, 100], [-20, 100], [-45, 45]] # Need to put the correct values
+    joint_radius: [[4.5, 4.5], [5, 5], [6, 6]] # Need to put the correct values
+
+  index:
+    joint_ids: [4, 5, 6]           
+    motor_ids: [4, 5, 6]          
+    spool_rad: [4.25, 4.25, 4.25] 
+    wind_direction: [1, 1, 1]
+    joint_ranges: [[0, 100], [-20, 100], [-45, 45]]
+    joint_radius: [[7.5, 7.5], [7.5, 7.5], [9, 9]]
+
+  middle:
+    joint_ids: [7, 8, 9]           
+    motor_ids: [7, 8, 9]          
+    spool_rad: [4.25, 4.25, 4.25] 
+    wind_direction: [1, 1, 1]
+    joint_ranges: [[0, 100], [-20, 100], [-45, 45]]
+    joint_radius: [[7.5, 7.5], [7.5, 7.5], [9, 9]]
+
+  ring: 
+    joint_ids: [10, 11, 12]           
+    motor_ids: [10, 11, 12]        
+    spool_rad: [4.25, 4.25, 4.25] 
+    wind_direction: [1, 1, 1]
+    joint_ranges: [[0, 100], [-20, 100], [-45, 45]]
+    joint_radius: [[7.5, 7.5], [7.5, 7.5], [9, 9]]
+
+  pinky:
+    joint_ids: [13, 14, 15]           
+    motor_ids: [13, 14, 15]          
+    spool_rad: [4.25, 4.25, 4.25] 
+    wind_direction: [1, 1, 1]
+    joint_ranges: [[0, 100], [-20, 100], [-45, 45]]
+    joint_radius: [[7.5, 7.5], [7.5, 7.5], [9, 9]]
+
+  wrist: #  Need to put the correct values
+    joint_ids: [16]           
+    motor_ids: [16]          
+    spool_rad: [6] 
+    wind_direction: [1]
+    joint_ranges: [[-45, 45]] # Need to put the correct values
+    joint_radius: [[12, 12]] # Need to put the correct values

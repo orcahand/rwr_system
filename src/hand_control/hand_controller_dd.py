@@ -4,11 +4,11 @@ from click import getchar
 import yaml
 import os
 import cvxopt
-import faive_system.src.hand_control.simplified_finger_kinematics as fk
+import simplified_finger_kinematics as fk
 import sympy as sym
 from threading import Thread, RLock, Event
 from joint_ekf import EKF
-from faive_system.src.common.utils import get_datetime_str
+# from faive_system.src.common.utils import get_datetime_str
 from dynamixel_client import *
 
 np.set_printoptions(precision=3, suppress=True)
@@ -25,10 +25,7 @@ class MuscleGroup:
         "spool_rad",
         "wind_direction",
         "joint_ranges",
-        "motor_init_pos",
-        "calibration_max",
-        "alpha",
-        "joint_radius",
+        "joint_radius"
     ]
 
     def __init__(self, name, muscle_group_json: dict):
@@ -43,13 +40,7 @@ class MuscleGroup:
             assert (
                 low_lim < up_lim
             ), f"joint range [idx] {low_lim} < {up_lim} is invalid"
-            mid_pos = (low_lim + up_lim) / 2
-            full_range = up_lim - low_lim
-
-            # double the range
-            low_lim = mid_pos - full_range / 2
-            up_lim = mid_pos + full_range / 2
-            joint_ranges[idx] = [low_lim, up_lim]
+            
         print(
             f"Created muscle group {name} with joint ids {self.joint_ids}, motor ids {self.motor_ids} and spool_rad {self.spool_rad}"
         )
@@ -77,7 +68,7 @@ class HandController:
     def __init__(
         self,
         port: str = "/dev/ttyUSB0",
-        config_yml: str = "hand_defs.yaml",
+        config_yml: str = "hand_defs_dd.yaml",
         init_motor_pos_update_thread: bool = True,
         compliant_test_mode: bool = False,
         max_motor_current: float = 200.0,
@@ -127,7 +118,8 @@ class HandController:
         pose = []
         for muscle_group in self.muscle_groups:
             self.num_of_joints += len(muscle_group.joint_ids)
-            pose.extend(muscle_group.calibration_max)
+            pose.extend(np.zeros(len(muscle_group.joint_ids)))
+
         self.calib_pose = np.array(pose, dtype=np.float32)
         self.joint_pos_array = np.zeros(self.num_of_joints, dtype=np.float32)
         self.joint_vel_array = np.zeros(self.num_of_joints, dtype=np.float32)
@@ -169,7 +161,8 @@ class HandController:
             "motor_ids",
             "spool_rad",
             "wind_direction",
-            "motor_init_pos",
+            "joint_ranges",
+            "joint_radius"
         ]
         for attr in attrs_to_get:
             setattr(self, attr, [])
@@ -291,7 +284,7 @@ class HandController:
         """
         tendon_lengths = fk.get_tendon_lengths_lambda(
             joint1, joint2, joint3, muscle_group
-        )
+        )  # Change this to our finger kinematics implementation, nothing to do with pytorch finger kinematics
         motor_pos = self.tendon_pos2motor_pos_sym(
             tendon_lengths, muscle_group=muscle_group
         )
@@ -461,6 +454,7 @@ class HandController:
         P = cvxopt.matrix(np.identity(num_motors)) * 1.0
         p = cvxopt.matrix(np.zeros(num_motors)) * 1.0
         G = cvxopt.matrix(np.identity(num_motors)) * -1.0
+        
         # TODO: Adjust G matrix for motor directions!
         h = -min_torque * cvxopt.matrix(np.ones(num_motors)) * 1.0
         cvxopt.solvers.options["show_progress"] = False  # suppress output
