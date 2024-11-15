@@ -4,7 +4,7 @@ from click import getchar
 import yaml
 import os
 import cvxopt
-import faive_system.src.hand_control.simplified_finger_kinematics as fk
+import rwr_system.src.hand_control.simplified_finger_kinematics as fk
 import sympy as sym
 from threading import Thread, RLock, Event
 from joint_ekf import EKF
