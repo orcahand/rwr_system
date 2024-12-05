@@ -22,6 +22,9 @@ class SensorPublisher(Node):
         self.sensing_data = {"pressure": {}, "fsr": {}}
         self.sensor_publishers = {"pressure": {}, "fsr": {}}
         
+        self.calibration_offsets = {"pressure": {}, "fsr": {}}
+        self.calibrated = False
+        
         self.get_logger().info("Started sensor publisher node")
 
         self.init_sensors()
@@ -48,7 +51,32 @@ class SensorPublisher(Node):
             topic_name = f"pressure/{sensor_name}"
             self.sensor_publishers["pressure"][sensor_name] = self.create_publisher(Float32, topic_name, 10)
         
+        self.calibrate_sensors()
+        
+    def calibrate_sensors(self):
+        self.get_logger().info("Calibrating sensors")
+        time.sleep(0.5)
+        calibration_data = {"pressure": {sensor: [] for sensor in self.sensing_data["pressure"]},
+                    "fsr": {sensor: [] for sensor in self.sensing_data["fsr"]}}
+
+        start_time = time.time()
+        while time.time() - start_time < 2:
+            with self.sensing_data_lock:
+                for sensor_type in self.sensing_data:
+                    for sensor_name in self.sensing_data[sensor_type]:
+                        calibration_data[sensor_type][sensor_name].append(self.sensing_data[sensor_type][sensor_name])
+            time.sleep(0.05) 
+
+        self.calibration_offsets = {"pressure": {}, "fsr": {}}
+        for sensor_type in calibration_data:
+            for sensor_name in calibration_data[sensor_type]:
+                self.calibration_offsets[sensor_type][sensor_name] = min(calibration_data[sensor_type][sensor_name])
+        
+        self.calibrated = True
+        self.get_logger().info(f"Calibration complete: {self.calibration_offsets}")
+        
     def recv_sensing_data(self, data):
+               
         with self.sensing_data_lock:
             for sensor_type, sensor_data in data.items():
                 if sensor_type in self.sensing_data:
@@ -63,17 +91,22 @@ class SensorPublisher(Node):
                     self.get_logger().warn(f"Sensor type {sensor_type} not found in sensing data")
 
     def publish_sensing_data(self):
+        if not self.calibrated:
+            return
+        
         with self.sensing_data_lock:
             # Publish pressure sensor data
             for sensor_name, sensor_value in self.sensing_data["pressure"].items():
                 msg = Float32()
-                msg.data = sensor_value
+                relative_value = sensor_value - self.calibration_offsets["pressure"][sensor_name]
+                msg.data = relative_value
                 self.sensor_publishers["pressure"][sensor_name].publish(msg)
 
             # Publish FSR sensor data
             for sensor_name, sensor_value in self.sensing_data["fsr"].items():
                 msg = Float32()
-                msg.data = sensor_value
+                relative_value = sensor_value - self.calibration_offsets["fsr"][sensor_name]
+                msg.data = relative_value
                 self.sensor_publishers["fsr"][sensor_name].publish(msg)
 
 def main():
@@ -85,7 +118,7 @@ def main():
     try:
         while rclpy.ok():
             sensor_publisher.publish_sensing_data()
-            time.sleep(0.1)  # Publish rate of 10 Hz
+            time.sleep(0.05)  # Publish rate of 10 Hz
     except KeyboardInterrupt:
         pass
 
