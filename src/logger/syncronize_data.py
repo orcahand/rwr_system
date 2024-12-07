@@ -13,6 +13,7 @@ from logger_node import TOPICS_TYPES  # Import the predefined topic types
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
+from depthMasking import get_image_depth_masked
 
 TOPICS_TYPES = {
     # FRANKA ROBOT
@@ -113,7 +114,7 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                 continue
 
             if TOPIC_TO_STRING[topic_type] == "Image":
-                # Sample images
+                # Sample images""
                 sampled_images = []
                 for t in desired_timestamps:
                     closest_idx = np.abs(topic_timestamps - t).argmin()
@@ -124,6 +125,10 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                     sampled_images = [cv2.resize(img, resize_to, interpolation=cv2.INTER_LINEAR) for img in sampled_images]
 
                 sampled_images = np.array(sampled_images)  # TxHxWxC
+                
+                if topic == "/oakd_wrist_view/color":
+                    sampled_images = get_image_depth_masked(sampled_images) 
+                           
                 chunk_size = (1,) + tuple(sampled_images.shape[1:])
                 if compress:
                     output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images, chunks = chunk_size, compression="lzf")
@@ -222,7 +227,7 @@ def main():
     parser.add_argument("input_folder", type=str, help="Path to the folder containing input HDF5 files.")
     # parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
     parser.add_argument("--sampling_freq", type=float, default=20, help="Sampling frequency in Hz.")
-    parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
+    # parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
     parser.add_argument("--compress",  action="store_true", help="Compress the output HDF5 files. [it might boost the performance on aws but might decrease the performance on local machine]")
     parser.add_argument(
         '--resize_to',
