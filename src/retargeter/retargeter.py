@@ -463,7 +463,7 @@ class Retargeter:
         debug_dict["mano_center_and_rot"] = mano_center_and_rot
         debug_dict["model_center_and_rot"] = (self.model_center, self.model_rotation)
         normalized_joint_pos = (
-            normalized_joint_pos @ self.model_rotation.T + self.model_center
+            normalized_joint_pos @ self.model_rotation.T + self.model_center + [0, -0.01, 0]
         )
             
         self.target_angles, wrist_angle = self.retarget_finger_mano_joints(normalized_joint_pos)
