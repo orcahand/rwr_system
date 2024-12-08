@@ -361,6 +361,18 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /retarget/normalized_mano_points
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        sensors: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /sensor_visualization_marker
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
