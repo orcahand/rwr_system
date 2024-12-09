@@ -14,6 +14,8 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 model.to(device)
 model.eval()
 
+print("Device: ", device)
+
 # Define transformation for the input image
 def transform_image(image):
     transform = Compose([
@@ -26,9 +28,8 @@ def transform_image(image):
 def get_image_depth_masked(images, image_name = None ,output_dir = None):
     count = 0
     images_masked = []
-    # for i in range(images.shape[0]):
     for i in range(len(images)):
-        image = images[i]
+        image = images[i] # torch.from_numpy(images[i]).to(device)
         count += 1
         if output_dir is not None:
             output_dir_depth_map = output_dir + "_depth_map"
@@ -57,6 +58,7 @@ def get_image_depth_masked(images, image_name = None ,output_dir = None):
         frame_pil = Image.fromarray(image_rgb)
         input_image = transform_image(frame_pil).unsqueeze(0)  # Add batch dimension
 
+        input_image = input_image.to(device)
         # Perform inference
         with torch.no_grad():
             prediction = model(input_image)
@@ -89,4 +91,5 @@ def get_image_depth_masked(images, image_name = None ,output_dir = None):
         # flipped = cv2.flip(masked_image, 0)
         images_masked.append(masked_image)
 
+    print("DEBUG3")
     return np.array(images_masked)
