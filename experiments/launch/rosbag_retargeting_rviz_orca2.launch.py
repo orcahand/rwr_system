@@ -30,17 +30,17 @@ def generate_launch_description():
                             get_package_share_directory('viz'),
                             "rosbag",
                             "recordings",
-                            "recording_2024-11-20_16-20-01/",
+                            "recording_2024-12-06_11-49-32/",
                         )
                     },
                 ],
             ),
-            # Node(
-            #     package="hand_control",
-            #     executable="hand_control_node.py",
-            #     name="hand_control_node",
-            #     output="screen"
-            # ),
+            Node(
+                package="hand_control",
+                executable="hand_control_node.py",
+                name="hand_control_node",
+                output="screen"
+            ),
             
             # RETARGET NODE
             Node(
