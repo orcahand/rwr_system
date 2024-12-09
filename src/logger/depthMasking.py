@@ -8,8 +8,10 @@ import numpy as np
 import os 
 
 # Load MiDaS model
-model_type = "MiDaS_small"  # Lightweight model
-model = torch.hub.load("intel-isl/MiDaS", model_type)
+model_type = "MiDaS_small"   # Lightweight model "DPT_Lite"
+model = torch.hub.load("intel-isl/MiDaS", model_type, pretrained=True)
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+model.to(device)
 model.eval()
 
 # Define transformation for the input image
@@ -21,11 +23,11 @@ def transform_image(image):
     ])
     return transform(image)
 
-
 def get_image_depth_masked(images, image_name = None ,output_dir = None):
     count = 0
     images_masked = []
-    for i in range(images.shape[0]):
+    # for i in range(images.shape[0]):
+    for i in range(len(images)):
         image = images[i]
         count += 1
         if output_dir is not None:
@@ -43,17 +45,14 @@ def get_image_depth_masked(images, image_name = None ,output_dir = None):
 
 
         ### HARDCODED PARAMETERS ### 
-        cropped_image = image[:, 45:] # before 45 it is the spools of the hand etc. Discard them
+        cropped_image = image[:, 190:] # before 45 it is the spools of the hand etc. Discard them
         resized_image = cv2.resize(cropped_image, (224,224) , interpolation=cv2.INTER_LINEAR)
-
 
         image = resized_image
 
         original_size = (image.shape[1], image.shape[0])  # Save original dimensions (width, height)
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB
 
-        # transform = torch.hub.load("intel-isl/MiDaS", "transforms").default_transform
-        # Transform the image for MiDaS input
         # Assuming 'frame' is your numpy array
         frame_pil = Image.fromarray(image_rgb)
         input_image = transform_image(frame_pil).unsqueeze(0)  # Add batch dimension
@@ -87,6 +86,7 @@ def get_image_depth_masked(images, image_name = None ,output_dir = None):
 
         # cv2.imwrite( f"masked_images_validation/{count}_masked_image.jpg" , masked_image)
 
+        # flipped = cv2.flip(masked_image, 0)
         images_masked.append(masked_image)
-    return np.array(images_masked)
 
+    return np.array(images_masked)

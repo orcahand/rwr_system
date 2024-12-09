@@ -14,6 +14,7 @@ from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
 from depthMasking import get_image_depth_masked
+import time
 
 TOPICS_TYPES = {
     # FRANKA ROBOT
@@ -121,14 +122,19 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                     closest_timestamp = topic_timestamps[closest_idx]
                     sampled_images.append(topic_group[str(closest_timestamp)][:])
 
-                if resize_to is not None:
-                    sampled_images = [cv2.resize(img, resize_to, interpolation=cv2.INTER_LINEAR) for img in sampled_images]
+                
+                if topic == "/oakd_wrist_view/color":
+            
+                    start_time = time.time()
+                    sampled_images = get_image_depth_masked(sampled_images) 
+                    print(f"Time taken for depth masking: {time.time() - start_time}")
+                
+                else: 
+                    if resize_to is not None:
+                        sampled_images = [cv2.resize(img, resize_to, interpolation=cv2.INTER_LINEAR) for img in sampled_images]
 
                 sampled_images = np.array(sampled_images)  # TxHxWxC
                 
-                if topic == "/oakd_wrist_view/color":
-                    sampled_images = get_image_depth_masked(sampled_images) 
-                           
                 chunk_size = (1,) + tuple(sampled_images.shape[1:])
                 if compress:
                     output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images, chunks = chunk_size, compression="lzf")
