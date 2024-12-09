@@ -138,6 +138,7 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                     output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images, chunks = chunk_size, compression="lzf")
                 else:
                     output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images, chunks = chunk_size)
+                    # output_h5.create_dataset(f"observations/images/masked_wrist", data=sampled_images, chunks = chunk_size)
 
             elif TOPIC_TO_STRING[topic_type] == "PoseStamped":
                 # Interpolate PoseStamped data
