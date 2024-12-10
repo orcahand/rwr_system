@@ -12,7 +12,8 @@ import cv2
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
-from depthMasking import get_image_depth_masked
+# from depthMasking import get_image_depth_masked
+from colorMasking import generate_color_masks
 import time
 
 TOPICS_TYPES = {
@@ -122,13 +123,15 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
 
                 
                 if topic == "/oakd_wrist_view/color":
-            
                     start_time = time.time()
-                    sampled_images = get_image_depth_masked(sampled_images) 
-                    print(f"Time taken for depth masking: {time.time() - start_time}")
-                
-                else: 
-                    if resize_to is not None:
+                    sampled_images = generate_color_masks(sampled_images, "wrist", replace = False, output_dir = "test_results") 
+                    print(f"Time taken for color mapping: {time.time() - start_time}")
+                elif topic == "/oakd_front_view/color":
+                    sampled_images = generate_color_masks(sampled_images, "front", replace = False, output_dir = "test_results") 
+                elif topic == "/oakd_side_view/color":
+                    sampled_images = generate_color_masks(sampled_images, "side", replace = False, output_dir = "test_results")
+
+                if resize_to is not None:
                         sampled_images = [cv2.resize(img, resize_to, interpolation=cv2.INTER_LINEAR) for img in sampled_images]
 
                 sampled_images = np.array(sampled_images)  # TxHxWxC
