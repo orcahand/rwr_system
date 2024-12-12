@@ -2,9 +2,12 @@ import cv2
 import numpy as np
 import os
 
-WRIST_MASK_PATH = "src/logger/fov_masks/mask_wrist_camera.png"
-FRONT_MASK_PATH = "src/ingress/oakd/fov_masks/mask_front_camera.png"
-SIDE_MASK_PATH = "src/ingress/oakd/fov_masks/mask_wrist_camera.png"
+
+file_path = os.path.join(os.path.dirname(__file__),"fov_masks")
+
+WRIST_MASK_PATH = os.path.join(file_path, "mask_wrist_camera.png")
+FRONT_MASK_PATH = os.path.join(file_path, "mask_front_camera.png")
+SIDE_MASK_PATH = os.path.join(file_path, "mask_side_camera.png")
 
 def get_cropped_and_collor_maps(image, camera_id, output_dir=None):
     """
@@ -34,13 +37,13 @@ def get_cropped_and_collor_maps(image, camera_id, output_dir=None):
     if image is None:
         print("Error: No image provided.")
         return image
-
+    
     image_masked = cv2.bitwise_and(image, mask)
     
     # Crop the image based on black surrounding so we lose less information when resizing.
     image_masked = image_masked[y:y+h, x:x+w]
 
-    image_masked = cv2.cvtColor(image_masked, cv2.COLOR_BGR2RGB)
+    # image_masked = cv2.cvtColor(image_masked, cv2.COLOR_BGR2RGB)
 
     if camera_id == "wrist":
         image_masked = cv2.rotate(image_masked, cv2.ROTATE_90_CLOCKWISE)
@@ -80,7 +83,7 @@ def get_cropped_and_collor_maps(image, camera_id, output_dir=None):
         # Save the mask if output directory is provided
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
-            cv2.imwrite(os.path.join(output_dir, f"{camera_id}_{color}_{idx}_mask.jpg"), color_mask)
+            cv2.imwrite(os.path.join(output_dir, f"{camera_id}_{color}_mask.jpg"), color_mask)
     
     blue_mask = color_masks.get("blue", np.zeros_like(mask))
     yellow_mask = color_masks.get("yellow", np.zeros_like(mask))
@@ -90,7 +93,6 @@ def get_cropped_and_collor_maps(image, camera_id, output_dir=None):
     masks_combined = cv2.merge([blue_mask, yellow_mask, red_mask])
 
     return image_masked, masks_combined
-
 
 def calculate_crop_coordinates(mask_path, tolerance=1):
     """

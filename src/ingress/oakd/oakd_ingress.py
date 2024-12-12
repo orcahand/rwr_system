@@ -260,17 +260,16 @@ class OakDDriver:
                                     print(e)
                                     continue
                             color = msgs["colorize"].getCvFrame()
-
-                            if self.camera_name == "oakd_wrist_view_images":
+                            
+                            if self.camera_name == "wrist_view":
                                 color, color_masks = get_cropped_and_collor_maps(color, "wrist", output_dir = None) 
-                            elif self.camera_name == "oakd_front_view_images":
+                            elif self.camera_name == "front_view":
                                 color, color_masks = get_cropped_and_collor_maps(color, "front", output_dir = None) 
-                            elif self.camera_name == "oakd_side_view_images":
+                            elif self.camera_name == "side_view":
                                 color, color_masks = get_cropped_and_collor_maps(color, "side", output_dir = None)
 
                             color = cv2.resize(color, (224,244), interpolation=cv2.INTER_LINEAR)
                             color_masks = cv2.resize(color_masks, (224,244), interpolation=cv2.INTER_LINEAR)
-                            print(color_masks.shape)
                             if self.calibrated == False:
                                 self.calibrate(color)
 

@@ -100,11 +100,10 @@ class OakDPublisher(Node):
                 ):
                     continue
 
-                color, depth, color_masks = deepcopy(
-                    self.camera_dict[camera_name]["color"]
-                ), deepcopy(self.camera_dict[camera_name]["depth"]),
-                deepcopy(self.camera_dict[camera_name]["color_masks"])
-
+                color = deepcopy(self.camera_dict[camera_name]["color"])
+                depth = deepcopy(self.camera_dict[camera_name]["depth"])
+                color_masks = deepcopy(self.camera_dict[camera_name]["color_masks"])
+                
                 # publish normal images
                 try:
                     header = Header()
