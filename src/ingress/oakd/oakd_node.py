@@ -21,8 +21,8 @@ class OakDPublisher(Node):
     def __init__(self, camera_dict=None):
         super().__init__("oakd_publisher")
         self.declare_parameter("visualize", False)
-        self.declare_parameter("enable_front_camera", False)
-        self.declare_parameter("enable_side_camera", False)
+        self.declare_parameter("enable_front_camera", True)
+        self.declare_parameter("enable_side_camera", True)
         self.declare_parameter("enable_wrist_camera", True)
 
         enable_front_camera = self.get_parameter("enable_front_camera").value
@@ -63,7 +63,7 @@ class OakDPublisher(Node):
                     Image, f"/oakd_{camera_name}/color", 100
                 ),
 
-                "bin_output_pub": self.create_publisher(
+                "col_masks_output_pub": self.create_publisher(
                     Image, f"/oakd_{camera_name}/color_mask", 100
                 ),
                 
@@ -127,7 +127,7 @@ class OakDPublisher(Node):
                     output_img_binary = self.bridge.cv2_to_imgmsg(
                         color_masks, "bgr8", header=header
                     )
-                    self.camera_dict[camera_name]["bin_output_pub"].publish(
+                    self.camera_dict[camera_name]["col_masks_output_pub"].publish(
                         output_img_binary
                     )
                     # print(f"Published image for {camera_name}")
