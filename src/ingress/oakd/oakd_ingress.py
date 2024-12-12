@@ -11,6 +11,7 @@ from oakd_utils import PointCloudVisualizer, calibrate_with_aruco, compute_proje
 import numpy as np
 import yaml
 import os
+from colorMasking import get_cropped_and_collor_maps
 #!/usr/bin/env python3
 
 COLOR = True
@@ -199,7 +200,6 @@ class OakDDriver:
                     break
                 time.sleep(0.1)
 
-                
             device.setIrLaserDotProjectorBrightness(1200)
             qs = []
             qs.append(device.getOutputQueue("colorize", maxSize=1, blocking=False))
@@ -260,6 +260,16 @@ class OakDDriver:
                                     print(e)
                                     continue
                             color = msgs["colorize"].getCvFrame()
+                            
+                            if self.camera_name == "wrist_view":
+                                color, color_masks = get_cropped_and_collor_maps(color, "wrist", output_dir = None) 
+                            elif self.camera_name == "front_view":
+                                color, color_masks = get_cropped_and_collor_maps(color, "front", output_dir = None) 
+                            elif self.camera_name == "side_view":
+                                color, color_masks = get_cropped_and_collor_maps(color, "side", output_dir = None)
+
+                            color = cv2.resize(color, (224,244), interpolation=cv2.INTER_LINEAR)
+                            color_masks = cv2.resize(color_masks, (224,244), interpolation=cv2.INTER_LINEAR)
                             if self.calibrated == False:
                                 self.calibrate(color)
 
@@ -293,11 +303,13 @@ class OakDDriver:
 
                             if self.callback is not None:
                                 if self.camera_name is not None:
-                                    self.callback(color, depth, self.camera_name)
-                                else:
-                                    self.callback(color, depth)
-                        
+                                    # self.callback(color, depth, self.camera_name)
+                                    self.callback(color, depth, color_masks, self.camera_name)
 
+                                else:
+                                    # self.callback(color, depth)
+                                    self.callback(color, depth, color_masks)
+                                    
                 key = cv2.waitKey(1)
                 if key == ord("s"):
                     timestamp = str(int(time.time()))
