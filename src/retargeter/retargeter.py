@@ -91,7 +91,7 @@ class Retargeter:
 
         self.target_angles = None
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = "cpu" # "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
 
         self.gc_limits_lower = GC_LIMITS_LOWER
@@ -453,10 +453,10 @@ class Retargeter:
         )
         
         # TODO: Make the thumb rotate even more!
-        normalized_joint_pos = (
-            retarget_utils.correct_rokoko_offset(normalized_joint_pos, 
-                                                 offset_angle=15, scaling_factor=2)
-        )
+        # normalized_joint_pos = (
+        #     retarget_utils.correct_rokoko_offset(normalized_joint_pos, 
+        #                                          offset_angle=15, scaling_factor=2)
+        # )
         # rotate joints about z xis 15 degrees
         normalized_joint_pos = self.adjust_mano_fingers(normalized_joint_pos)
         # (model_joint_pos - model_center) @ model_rotation = normalized_joint_pos
