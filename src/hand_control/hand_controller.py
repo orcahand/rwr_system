@@ -487,11 +487,12 @@ class HandController(CalibrationClass):
         """
         joints_ratio_list = [0 for _ in range(17)]
         
-        # calibration_ratios_file_name = self.find_latest_calibration_file("src/hand_control/calibration_yaml")
-        calibration_ratios_file_name = "src/hand_control/calibration_yaml/calibration_ratios.yaml"
-        
+        current_path = os.path.abspath(_file_)
+        current_path = os.path.dirname(current_path)
+        file_path = os.path.join(current_path,"calibration_yaml", "calibration_ratios.yaml")
+
         # Open the YAML file
-        if not os.path.isfile(calibration_ratios_file_name):
+        if not os.path.isfile(file_path):
             raise FileNotFoundError(f"Calibration ratios file not found: {calibration_ratios_file_name}. \n Have you run the calibration script?")
 
         with open(calibration_ratios_file_name, "r") as yaml_file:
