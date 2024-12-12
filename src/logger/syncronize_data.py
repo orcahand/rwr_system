@@ -30,6 +30,10 @@ TOPICS_TYPES = {
     "/oakd_side_view/color": Image,
     "/oakd_wrist_view/color": Image,
     
+    "/oakd_front_view/color_mask": Image,
+    "/oakd_side_view/color_mask": Image,
+    "/oakd_wrist_view/color_mask": Image,
+
     "/task_description": String,  # New topic for task description
     
     # CAMERA PARAMETERS
