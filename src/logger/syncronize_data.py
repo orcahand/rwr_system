@@ -123,16 +123,6 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                     closest_timestamp = topic_timestamps[closest_idx]
                     sampled_images.append(topic_group[str(closest_timestamp)][:])
 
-                
-                if topic == "/oakd_wrist_view/color":
-                    start_time = time.time()
-                    sampled_images = generate_color_masks(sampled_images, "wrist", replace = False, output_dir = None) 
-                    print(f"Time taken for color mapping: {time.time() - start_time}")
-                elif topic == "/oakd_front_view/color":
-                    sampled_images = generate_color_masks(sampled_images, "front", replace = False, output_dir = None) 
-                elif topic == "/oakd_side_view/color":
-                    sampled_images = generate_color_masks(sampled_images, "side", replace = False, output_dir = None)
-
                 if resize_to is not None:
                         sampled_images = [cv2.resize(img, resize_to, interpolation=cv2.INTER_LINEAR) for img in sampled_images]
 
@@ -195,13 +185,14 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
 
     print(f"Processed data saved to: {output_h5_path}")
 
-def process_folder(input_folder, sampling_frequency, compress, resize_to, topic_types):
+def process_folder(input_folder, output_folder, sampling_frequency, compress, resize_to, topic_types):
     """
     Process all HDF5 files in the given folder and save the processed files
     with a running index in a new folder named <input_folder>_processed.
     
     Parameters:
         input_folder (str): Path to the folder containing input HDF5 files.
+        output_folder (str): Path to the folder to save processed HDF5 files.
         sampling_frequency (float): Sampling frequency in Hz.
         topic_types (dict): Dictionary mapping topics to their types.
     """
@@ -212,10 +203,11 @@ def process_folder(input_folder, sampling_frequency, compress, resize_to, topic_
         return
 
     # Create the output folder
-    output_folder = os.path.join(os.path.dirname(input_folder), 
-                                 os.path.basename(input_folder) + "_processed" + f"_{int(sampling_frequency)}hz")
-    if compress:
-        output_folder += "_lzf"
+    if output_folder is None:
+        output_folder = os.path.join(os.path.dirname(input_folder), 
+                                     os.path.basename(input_folder) + "_processed" + f"_{int(sampling_frequency)}hz")
+        if compress:
+            output_folder += "_lzf"
     os.makedirs(output_folder, exist_ok=True)
     print(f"Output folder created: {output_folder}")
 
@@ -231,9 +223,11 @@ def process_folder(input_folder, sampling_frequency, compress, resize_to, topic_
 
     print(f"All files processed. Processed files are saved in {output_folder}.")
 
+
 def main():
     parser = argparse.ArgumentParser(description="Process and synchronize HDF5 files.")
     parser.add_argument("input_folder", type=str, help="Path to the folder containing input HDF5 files.")
+    parser.add_argument("--output_folder", type=str, default=None, help="Path to the folder to save processed HDF5 files.")
     parser.add_argument("--sampling_freq", type=float, default=20, help="Sampling frequency in Hz.")
     parser.add_argument("--compress",  action="store_true", help="Compress the output HDF5 files. [it might boost the performance on aws but might decrease the performance on local machine]")
     parser.add_argument(
@@ -245,7 +239,7 @@ def main():
     args = parser.parse_args()
 
     # Process all files in the folder
-    process_folder(args.input_folder, args.sampling_freq, args.compress, args.resize_to, TOPICS_TYPES)
+    process_folder(args.input_folder, args.output_folder, args.sampling_freq, args.compress, args.resize_to, TOPICS_TYPES)
 
 if __name__ == "__main__":
     main()
