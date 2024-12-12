@@ -122,14 +122,14 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                     sampled_images.append(topic_group[str(closest_timestamp)][:])
 
                 
-                if topic == "/oakd_wrist_view/color":
-                    start_time = time.time()
-                    sampled_images = generate_color_masks(sampled_images, "wrist", replace = False, output_dir = None) 
-                    print(f"Time taken for color mapping: {time.time() - start_time}")
-                elif topic == "/oakd_front_view/color":
-                    sampled_images = generate_color_masks(sampled_images, "front", replace = False, output_dir = None) 
-                elif topic == "/oakd_side_view/color":
-                    sampled_images = generate_color_masks(sampled_images, "side", replace = False, output_dir = None)
+                # if topic == "/oakd_wrist_view/color":
+                #     start_time = time.time()
+                #     sampled_images = generate_color_masks(sampled_images, "wrist", replace = False, output_dir = None) 
+                #     print(f"Time taken for color mapping: {time.time() - start_time}")
+                # elif topic == "/oakd_front_view/color":
+                #     sampled_images = generate_color_masks(sampled_images, "front", replace = False, output_dir = None) 
+                # elif topic == "/oakd_side_view/color":
+                #     sampled_images = generate_color_masks(sampled_images, "side", replace = False, output_dir = None)
 
                 if resize_to is not None:
                         sampled_images = [cv2.resize(img, resize_to, interpolation=cv2.INTER_LINEAR) for img in sampled_images]
