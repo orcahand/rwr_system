@@ -493,9 +493,9 @@ class HandController(CalibrationClass):
 
         # Open the YAML file
         if not os.path.isfile(file_path):
-            raise FileNotFoundError(f"Calibration ratios file not found: {calibration_ratios_file_name}. \n Have you run the calibration script?")
+            raise FileNotFoundError(f"Calibration ratios file not found: {file_path}. \n Have you run the calibration script?")
 
-        with open(calibration_ratios_file_name, "r") as yaml_file:
+        with open(file_path, "r") as yaml_file:
             calibration_defs = yaml.safe_load(yaml_file)
         
         for muscle_group in self.muscle_groups:
