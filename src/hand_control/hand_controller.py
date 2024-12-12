@@ -487,7 +487,7 @@ class HandController(CalibrationClass):
         """
         joints_ratio_list = [0 for _ in range(17)]
         
-        current_path = os.path.abspath(_file_)
+        current_path = os.path.abspath(__file__)
         current_path = os.path.dirname(current_path)
         file_path = os.path.join(current_path,"calibration_yaml", "calibration_ratios.yaml")
 
