@@ -13,8 +13,7 @@ model = torch.hub.load("intel-isl/MiDaS", model_type, pretrained=True)
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 model.to(device)
 model.eval()
-
-print("Device: ", device)
+print(f"Device: {device}")
 
 # Define transformation for the input image
 def transform_image(image):
@@ -91,5 +90,5 @@ def get_image_depth_masked(images, image_name = None ,output_dir = None):
         # flipped = cv2.flip(masked_image, 0)
         images_masked.append(masked_image)
 
-    print("DEBUG3")
+    # print("DEBUG3")
     return np.array(images_masked)
