@@ -32,13 +32,10 @@ TOPICS_TYPES = {
     # CAMERA PARAMETERS
     "/oakd_front_view/intrinsics": Float32MultiArray,
     "/oakd_side_view/intrinsics": Float32MultiArray,
-    "/oakd_wrist_view/intrinsics": Float32MultiArray,
     "/oakd_front_view/extrinsics": Float32MultiArray,
     "/oakd_side_view/extrinsics": Float32MultiArray,
-    "/oakd_wrist_view/extrinsics": Float32MultiArray,
     "/oakd_front_view/projection": Float32MultiArray,
     "/oakd_side_view/projection": Float32MultiArray,
-    "/oakd_wrist_view/projection": Float32MultiArray,
 }
 
 
@@ -222,7 +219,7 @@ def main():
     parser.add_argument("input_folder", type=str, help="Path to the folder containing input HDF5 files.")
     # parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
     parser.add_argument("--sampling_freq", type=float, default=20, help="Sampling frequency in Hz.")
-    parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
+    #parser.add_argument("--sampling_freq", type=float, default=100, help="Sampling frequency in Hz.")
     parser.add_argument("--compress",  action="store_true", help="Compress the output HDF5 files. [it might boost the performance on aws but might decrease the performance on local machine]")
     parser.add_argument(
         '--resize_to',
