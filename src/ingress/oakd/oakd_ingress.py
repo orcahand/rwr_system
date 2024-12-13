@@ -253,6 +253,7 @@ class OakDDriver:
                             if has_depth:
                                 try:
                                     depth = msgs["depth"].getFrame()
+                                    depth = cv2.resize(depth, (224,224), interpolation=cv2.INTER_LINEAR)
                                     color = msgs["colorize"].getCvFrame()
                                     rectified_left = msgs["rectified_left"].getCvFrame()
                                     rectified_right = msgs["rectified_right"].getCvFrame()
@@ -267,7 +268,10 @@ class OakDDriver:
                                 color, color_masks = get_cropped_and_collor_maps(color, "front", output_dir = None) 
                             elif self.camera_name == "side_view":
                                 color, color_masks = get_cropped_and_collor_maps(color, "side", output_dir = None)
-
+                            else:
+                                print(f"Camera name '{self.camera_name}' not recognized, using empty color masks")
+                                color_masks = np.zeros(color.shape, dtype=np.uint8)
+                            
                             color = cv2.resize(color, (224,224), interpolation=cv2.INTER_LINEAR)
                             color_masks = cv2.resize(color_masks, (224,224), interpolation=cv2.INTER_LINEAR)
                             if self.calibrated == False:

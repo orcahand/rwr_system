@@ -4,8 +4,8 @@ import time
 import yaml
 import os
 from threading import RLock
-import faive_system.src.hand_control.finger_kinematics as fk
-from faive_system.src.hand_control.dynamixel_client import *
+import faive_system.src.hand_control.finger_kinematics as fk # type: ignore
+from faive_system.src.hand_control.dynamixel_client import * # type: ignore
 from calibration import CalibrationClass
 
 class MuscleGroup:
@@ -60,7 +60,7 @@ class HandController(CalibrationClass):
 
         # initialize and connect dynamixels
         # self._dxc = DummyDynamixelClient(self.motor_ids, port, baudrate)
-        self._dxc = DynamixelClient(self.motor_ids, port, baudrate)
+        self._dxc = DynamixelClient(self.motor_ids, port, baudrate) # type: ignore
 
         self.connect_to_dynamixels()
 
@@ -487,14 +487,15 @@ class HandController(CalibrationClass):
         """
         joints_ratio_list = [0 for _ in range(17)]
         
-        # calibration_ratios_file_name = self.find_latest_calibration_file("src/hand_control/calibration_yaml")
-        calibration_ratios_file_name = "src/hand_control/calibration_yaml/calibration_ratios.yaml"
-        
-        # Open the YAML file
-        if not os.path.isfile(calibration_ratios_file_name):
-            raise FileNotFoundError(f"Calibration ratios file not found: {calibration_ratios_file_name}. \n Have you run the calibration script?")
+        current_path = os.path.abspath(__file__)
+        current_path = os.path.dirname(current_path)
+        file_path = os.path.join(current_path,"calibration_yaml", "calibration_ratios.yaml")
 
-        with open(calibration_ratios_file_name, "r") as yaml_file:
+        # Open the YAML file
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError(f"Calibration ratios file not found: {file_path}. \n Have you run the calibration script?")
+
+        with open(file_path, "r") as yaml_file:
             calibration_defs = yaml.safe_load(yaml_file)
         
         for muscle_group in self.muscle_groups:
