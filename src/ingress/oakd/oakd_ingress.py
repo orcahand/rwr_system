@@ -262,6 +262,9 @@ class OakDDriver:
                                     continue
                             color = msgs["colorize"].getCvFrame()
                             
+                            if self.calibrated == False:
+                                self.calibrate(color)
+                            
                             if self.camera_name == "wrist_view":
                                 color, color_masks = get_cropped_and_collor_maps(color, "wrist", output_dir = None) 
                             elif self.camera_name == "front_view":
@@ -274,9 +277,6 @@ class OakDDriver:
                             
                             color = cv2.resize(color, (224,224), interpolation=cv2.INTER_LINEAR)
                             color_masks = cv2.resize(color_masks, (224,224), interpolation=cv2.INTER_LINEAR)
-                           
-                            if self.calibrated == False:
-                                self.calibrate(color)
 
                             if self.visualize:
                                 cv2.imshow("color", color)
