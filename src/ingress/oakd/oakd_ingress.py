@@ -265,7 +265,19 @@ class OakDDriver:
                             if self.calibrated == False:
                                 self.calibrate(color)
                             
-                            color_detected = None
+                            
+                            color_yaml_path = os.path.join( os.path.dirname(os.path.abspath(__file__)), "get_color.yaml")            
+                            if not os.path.isfile(color_yaml_path):
+                                raise FileNotFoundError(f"Color file not found: {color_yaml_path}. \n Have you run the calibration script?")
+       
+                            with open(color_yaml_path, "r") as yaml_file:
+                                color_detected = yaml.safe_load(yaml_file)
+
+                            if color_detected not in ["red", "blue", "yellow"]:
+                                color_detected = None
+
+                            # color_detected = "yellow" # Blue 
+
                             if self.camera_name == "wrist_view":
                                 color, color_masks = get_cropped_and_collor_maps(color, "wrist", color_detected, output_dir = None) 
                             elif self.camera_name == "front_view":
