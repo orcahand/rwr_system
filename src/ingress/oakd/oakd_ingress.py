@@ -265,12 +265,13 @@ class OakDDriver:
                             if self.calibrated == False:
                                 self.calibrate(color)
                             
+                            color_detected = None
                             if self.camera_name == "wrist_view":
-                                color, color_masks = get_cropped_and_collor_maps(color, "wrist", output_dir = None) 
+                                color, color_masks = get_cropped_and_collor_maps(color, "wrist", color_detected, output_dir = None) 
                             elif self.camera_name == "front_view":
-                                color, color_masks = get_cropped_and_collor_maps(color, "front", output_dir = None) 
+                                color, color_masks = get_cropped_and_collor_maps(color, "front", color_detected, output_dir = None) 
                             elif self.camera_name == "side_view":
-                                color, color_masks = get_cropped_and_collor_maps(color, "side", output_dir = None)
+                                color, color_masks = get_cropped_and_collor_maps(color, "side", color_detected, output_dir = None)
                             else:
                                 print(f"Camera name '{self.camera_name}' not recognized, using empty color masks")
                                 color_masks = np.zeros(color.shape, dtype=np.uint8)

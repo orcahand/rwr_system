@@ -9,7 +9,7 @@ WRIST_MASK_PATH = os.path.join(file_path, "mask_wrist_camera.png")
 FRONT_MASK_PATH = os.path.join(file_path, "mask_front_camera.png")
 SIDE_MASK_PATH = os.path.join(file_path, "mask_side_camera.png")
 
-def get_cropped_and_collor_maps(image, camera_id, output_dir=None):
+def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_dir=None):
     """
     Generate color masks for the provided image based on defined color ranges.
 
@@ -88,10 +88,26 @@ def get_cropped_and_collor_maps(image, camera_id, output_dir=None):
     blue_mask = color_masks.get("blue", np.zeros_like(mask))
     yellow_mask = color_masks.get("yellow", np.zeros_like(mask))
     red_mask = color_masks.get("red", np.zeros_like(mask))
-    
+  
     # Stack the masks to form a 3-channel image
     masks_combined = cv2.merge([blue_mask, yellow_mask, red_mask])
 
+    if color_detected:
+        if color_detected == "blue":
+            mask_channel = blue_mask
+        elif color_detected == "yellow":
+            mask_channel = yellow_mask
+        elif color_detected == "red":
+            mask_channel = red_mask
+
+        gray_image = cv2.cvtColor(image_masked, cv2.COLOR_BGR2GRAY)
+        gray_image_bgr = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
+
+        condition_mask = (mask_channel == 255)
+        
+        image_masked = np.copy(gray_image_bgr)
+        image_masked[condition_mask,:] = (255,0,0)
+        
     return image_masked, masks_combined
 
 def calculate_crop_coordinates(mask_path, tolerance=1):
