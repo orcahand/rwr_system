@@ -91,7 +91,7 @@ class ColorProcessingNode(Node):
         
         resized_image = cv2.resize(cv_image, (224, 224))
         
-        return color_masked, gray_image, color_string
+        return color_masked, gray_image, color_string, resized_image
 
 def main(args=None):
     rclpy.init(args=args)
