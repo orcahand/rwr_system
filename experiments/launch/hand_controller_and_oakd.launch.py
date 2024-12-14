@@ -7,6 +7,11 @@ from ament_index_python.packages import get_package_share_directory
 
 cameras = {"front_view": True, "side_view": True, "wrist_view": True}
 
+porcessing_config = {
+    "grayed_images_with_colored_mask": True,
+    "color_string": True,
+}
+
 
 def generate_launch_description():
     urdf = os.path.join(
@@ -32,6 +37,18 @@ def generate_launch_description():
                     {"enable_front_camera": cameras["front_view"]},
                      {"enable_side_camera": cameras["side_view"]},
                     {"enable_wrist_camera": cameras["wrist_view"]},
+                ],
+            ),
+            
+            # PROCESSING NODE
+            Node(
+                package="processing",
+                executable="processing_node.py",
+                name="processing_node",
+                output="screen",
+                parameters=[
+                    {"grayed_images_with_colored_mask": porcessing_config["grayed_images_with_colored_mask"]},
+                    {"color_string": porcessing_config["color_string"]},
                 ],
             ),
             

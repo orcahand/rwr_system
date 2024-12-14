@@ -71,6 +71,7 @@ packages = [
     "faive_system.src.hand_control",
     "faive_system.src.logger",
     "faive_system.src.ingress",
+    "faive_system.src.processing",
     "faive_system.src.viz",
     "faive_system.src.common",
 ]

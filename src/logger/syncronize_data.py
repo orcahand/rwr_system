@@ -231,7 +231,7 @@ def main():
     parser = argparse.ArgumentParser(description="Process and synchronize HDF5 files.")
     parser.add_argument("input_folder", type=str, help="Path to the folder containing input HDF5 files.")
     parser.add_argument("--output_folder", type=str, default=None, help="Path to the folder to save processed HDF5 files.")
-    parser.add_argument("--sampling_freq", type=float, default=20, help="Sampling frequency in Hz.")
+w    parser.add_argument("--sampling_freq", type=float, default=20, help="Sampling frequency in Hz.")
     parser.add_argument("--compress",  action="store_true", help="Compress the output HDF5 files. [it might boost the performance on aws but might decrease the performance on local machine]")
     parser.add_argument(
         '--resize_to',
