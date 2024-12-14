@@ -261,6 +261,10 @@ class OakDDriver:
                                     print(e)
                                     continue
                             color = msgs["colorize"].getCvFrame()
+
+                            if self.calibrated == False:
+                                if has_depth:
+                                    self.calibrate(color)
                             
                             if self.camera_name == "wrist_view":
                                 color, color_masks = get_cropped_and_collor_maps(color, "wrist", output_dir = None) 
@@ -272,10 +276,14 @@ class OakDDriver:
                                 print(f"Camera name '{self.camera_name}' not recognized, using empty color masks")
                                 color_masks = np.zeros(color.shape, dtype=np.uint8)
                             
+                            # if self.calibrated == False:
+                            #     if has_depth:
+                            #         self.calibrate(color)
+
+                              
                             color = cv2.resize(color, (224,224), interpolation=cv2.INTER_LINEAR)
                             color_masks = cv2.resize(color_masks, (224,224), interpolation=cv2.INTER_LINEAR)
-                            if self.calibrated == False:
-                                self.calibrate(color)
+                            
 
                             if self.visualize:
                                 cv2.imshow("color", color)
@@ -291,19 +299,22 @@ class OakDDriver:
                                     cv2.imshow("rectified_left", rectified_left)
                                     cv2.imshow("rectified_right", rectified_right)
 
+                          
                             rgb = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
                             if has_depth and self.visualize and depth is not None:
                                 pcd, rgbd = pcl_converter.rgbd_to_projection(depth, rgb)
 
                             if self.visualize and has_depth:
                                 pcl_converter.visualize_pcd()
-                                
+
+                            
                             if not has_depth:
                                 # Special case, for wrist camera, when no depth information is avaliable,
                                 # create dummy depth image
                                 if color is not None:
                                     height, width, _ = color.shape
                                     depth = np.zeros((height, width), dtype=np.uint16)
+
 
                             if self.callback is not None:
                                 if self.camera_name is not None:
