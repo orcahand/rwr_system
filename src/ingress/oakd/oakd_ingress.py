@@ -391,10 +391,10 @@ class OakDDriver:
             color_string = color_found
             if self.get_color_detected() !=  color_string:
                 if not self.get_start_time_flag():
-                    self.get_start_time() = time.time()
+                    self.set_start_time(time.time())
                     self.set_start_time_flag(True)
                 else:
-                    if time.time() - self.get_start_time() > 3:
+                    if time.time() - self.get_start_time() > 5:
                         self.set_color_detected(color_string)
                         self.set_start_time_flag(False)
             else:
