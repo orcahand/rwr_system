@@ -21,9 +21,9 @@ class OakDPublisher(Node):
     def __init__(self, camera_dict=None):
         super().__init__("oakd_publisher")
         self.declare_parameter("visualize", False)
-        self.declare_parameter("enable_front_camera", True)
+        self.declare_parameter("enable_front_camera", False)
         self.declare_parameter("enable_side_camera", True)
-        self.declare_parameter("enable_wrist_camera", True)
+        self.declare_parameter("enable_wrist_camera", False)
 
         enable_front_camera = self.get_parameter("enable_front_camera").value
         enable_side_camera = self.get_parameter("enable_side_camera").value
@@ -62,11 +62,6 @@ class OakDPublisher(Node):
                 "rgb_output_pub": self.create_publisher(
                     Image, f"/oakd_{camera_name}/color", 100
                 ),
-
-                "col_masks_output_pub": self.create_publisher(
-                    Image, f"/oakd_{camera_name}/color_mask", 100
-                ),
-                
                 "depth_output_pub": self.create_publisher(
                     Image, f"/oakd_{camera_name}/depth", 100
                 ),
@@ -82,13 +77,12 @@ class OakDPublisher(Node):
                 "calibrated" : False
             }
 
-    def recv_oakd_images(self, color, depth, color_masks, camera_name):
+    def recv_oakd_images(self, color, depth, camera_name):
         with self.camera_dict[camera_name]["lock"]:
             (
                 self.camera_dict[camera_name]["color"],
                 self.camera_dict[camera_name]["depth"],
-                self.camera_dict[camera_name]["color_masks"],
-            ) = (color, depth, color_masks)
+            ) = (color, depth)
 
     def publish_images(self):
         for camera_name in self.camera_dict.keys():
@@ -96,14 +90,13 @@ class OakDPublisher(Node):
                 if (
                     self.camera_dict[camera_name]["color"] is None
                     or self.camera_dict[camera_name]["depth"] is None
-                    or self.camera_dict[camera_name]["color_masks"] is None
                 ):
                     continue
 
-                color = deepcopy(self.camera_dict[camera_name]["color"])
-                depth = deepcopy(self.camera_dict[camera_name]["depth"])
-                color_masks = deepcopy(self.camera_dict[camera_name]["color_masks"])
-                
+                color, depth = deepcopy(
+                    self.camera_dict[camera_name]["color"]
+                ), deepcopy(self.camera_dict[camera_name]["depth"])
+
                 # publish normal images
                 try:
                     header = Header()
@@ -118,22 +111,6 @@ class OakDPublisher(Node):
                     # print(f"Published image for {camera_name}")
                 except CvBridgeError as e:
                     self.get_logger().error(f"Error publishing color image: {e}")
-
-                # publish color_masks images
-                try:
-                    header = Header()
-                    header.stamp = self.get_clock().now().to_msg()
-                    header.frame_id = "world"
-                    output_img_binary = self.bridge.cv2_to_imgmsg(
-                        color_masks, "bgr8", header=header
-                    )
-                    self.camera_dict[camera_name]["col_masks_output_pub"].publish(
-                        output_img_binary
-                    )
-                    # print(f"Published image for {camera_name}")
-                except CvBridgeError as e:
-                    self.get_logger().error(f"Error publishing color masks image: {e}")
-
 
                 try:
                     header = Header()
@@ -180,7 +157,6 @@ class OakDPublisher(Node):
                     self.camera_dict[camera_name]["calibrated"] = True
                     
                 except Exception as e:
-                    # raise NotImplementedError(camera_name)
                     if camera_name == "wrist_view":
                         pass
                     else:
@@ -198,7 +174,6 @@ def main():
         oakd_publisher.publish_images()
         time.sleep(0.01)
     rclpy.shutdown()
-
 
 if __name__ == "__main__":
     main()
