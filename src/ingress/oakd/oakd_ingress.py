@@ -12,6 +12,7 @@ import numpy as np
 import yaml
 import os
 from colorMasking import get_cropped_and_collor_maps
+from src.ingress.oakd.detect_cubes import detect_cubes
 #!/usr/bin/env python3
 
 COLOR = True
@@ -144,7 +145,9 @@ for mxid in set(oakd_cams.keys()).difference([c.mxid for c in available_cams]):
 print("OAK_CAMS_LIST", OAK_CAMS_LIST)
 
 class OakDDriver:
-
+    COLOR_DETECTED = None
+    START_TIME_FLAG = False
+    START_TIME = 0
     def __init__(
         self, callback, visualize=True, device_mxid=None, camera_name=None
     ) -> None:
@@ -265,30 +268,39 @@ class OakDDriver:
                             if self.calibrated == False:
                                 self.calibrate(color)
                             
-                            
-                            color_yaml_path = os.path.join( os.path.dirname(os.path.abspath(__file__)), "get_color.yaml")            
-                            if not os.path.isfile(color_yaml_path):
-                                raise FileNotFoundError(f"Color file not found: {color_yaml_path}. \n Have you run the calibration script?")
+                            # color_yaml_path = os.path.join( os.path.dirname(os.path.abspath(__file__)), "get_color.yaml")            
+                            # if not os.path.isfile(color_yaml_path):
+                            #     raise FileNotFoundError(f"Color file not found: {color_yaml_path}. \n Have you run the calibration script?")
        
-                            with open(color_yaml_path, "r") as yaml_file:
-                                color_detected = yaml.safe_load(yaml_file)
+                            # with open(color_yaml_path, "r") as yaml_file:
+                            #     color_detected = yaml.safe_load(yaml_file)
 
-                            if color_detected not in ["red", "blue", "yellow"]:
-                                color_detected = None
+                            # if color_detected not in ["red", "blue", "yellow"]:
+                            #     color_detected = None
 
                             # color_detected = "yellow" # Blue 
 
+                            if self.camera_name != "wrist_view":
+                                self.get_color(color, self.camera_name)
+
+                            color_detected = self.COLOR_DETECTED
+
                             if self.camera_name == "wrist_view":
-                                color, color_masks = get_cropped_and_collor_maps(color, "wrist", color_detected, output_dir = None) 
+                                color, color_masks, image_gray = get_cropped_and_collor_maps(color, "wrist", color_detected, output_dir = None) 
                             elif self.camera_name == "front_view":
-                                color, color_masks = get_cropped_and_collor_maps(color, "front", color_detected, output_dir = None) 
+                                color, color_masks, image_gray = get_cropped_and_collor_maps(color, "front", color_detected, output_dir = None) 
                             elif self.camera_name == "side_view":
-                                color, color_masks = get_cropped_and_collor_maps(color, "side", color_detected, output_dir = None)
+                                color, color_masks, image_gray = get_cropped_and_collor_maps(color, "side", color_detected, output_dir = None)
                             else:
                                 print(f"Camera name '{self.camera_name}' not recognized, using empty color masks")
                                 color_masks = np.zeros(color.shape, dtype=np.uint8)
                             
-                            color = cv2.resize(color, (224,224), interpolation=cv2.INTER_LINEAR)
+                            # color ---> IS IMAGE GRAY WITH COLORED CUBE/TRAY 
+                            color = cv2.resize(image_gray, (224,224), interpolation=cv2.INTER_LINEAR)
+
+                            #### TASK X FLAG #### 
+                            # color = cv2.resize(color, (224,224), interpolation=cv2.INTER_LINEAR)
+
                             color_masks = cv2.resize(color_masks, (224,224), interpolation=cv2.INTER_LINEAR)
 
                             if self.visualize:
@@ -347,6 +359,26 @@ class OakDDriver:
                         )
                 elif key == ord("q"):
                     break
+
+
+    def get_color(self, color_image, camera):
+
+        color_found = detect_cubes(color_image, camera)
+
+        if color_found == None:
+            return
+        else :
+            color_string = color_found
+            if self.COLOR_DETECTED !=  color_string:
+                if not self.START_TIME_FLAG:
+                    self.START_TIME = time.time()
+                    self.START_TIME_FLAG = True
+                else:
+                    if time.time() - self.START_TIME > 3:
+                        self.COLOR_DETECTED = color_string
+                        self.START_TIME_FLAG = False
+            else:
+                return
 
 
 if __name__ == "__main__":

@@ -92,6 +92,10 @@ def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_
     # Stack the masks to form a 3-channel image
     masks_combined = cv2.merge([blue_mask, yellow_mask, red_mask])
 
+    gray_image = cv2.cvtColor(image_masked, cv2.COLOR_BGR2GRAY)
+    gray_image_bgr = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
+    image_gray = np.copy(gray_image_bgr)
+
     if color_detected:
         if color_detected == "blue":
             mask_channel = blue_mask
@@ -100,15 +104,11 @@ def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_
         elif color_detected == "red":
             mask_channel = red_mask
 
-        gray_image = cv2.cvtColor(image_masked, cv2.COLOR_BGR2GRAY)
-        gray_image_bgr = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
-
         condition_mask = (mask_channel == 255)
         
-        image_masked = np.copy(gray_image_bgr)
-        image_masked[condition_mask,:] = (255,0,0)
+        image_gray[condition_mask,:] = (255,0,0)
         
-    return image_masked, masks_combined
+    return image_masked, masks_combined, image_gray
 
 def calculate_crop_coordinates(mask_path, tolerance=1):
     """
