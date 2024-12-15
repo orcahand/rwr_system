@@ -12,7 +12,7 @@ import numpy as np
 import yaml
 import os
 from colorMasking import get_cropped_and_collor_maps
-from src.ingress.oakd.detect_cubes import detect_cubes
+from detect_cubes import detect_cubes
 #!/usr/bin/env python3
 
 COLOR = True
