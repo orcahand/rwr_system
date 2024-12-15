@@ -148,6 +148,26 @@ class OakDDriver:
     COLOR_DETECTED = None
     START_TIME_FLAG = False
     START_TIME = 0
+
+    def get_color_detected(self):
+        return self.COLOR_DETECTED
+
+    def set_color_detected(self, value):
+        self.COLOR_DETECTED = value
+
+    def get_start_time_flag(self):
+        return self.START_TIME_FLAG
+
+    def set_start_time_flag(self, value):
+        self.START_TIME_FLAG = value
+
+    def get_start_time(self):
+        return self.START_TIME
+
+    def set_start_time(self, value):
+        self.START_TIME = value
+
+
     def __init__(
         self, callback, visualize=True, device_mxid=None, camera_name=None
     ) -> None:
@@ -283,7 +303,7 @@ class OakDDriver:
                             if self.camera_name != "wrist_view":
                                 self.get_color(color, self.camera_name)
 
-                            color_detected = self.COLOR_DETECTED
+                            color_detected = self.get_color_detected
 
                             if self.camera_name == "wrist_view":
                                 color, color_masks, image_gray = get_cropped_and_collor_maps(color, "wrist", color_detected, output_dir = None) 
@@ -369,14 +389,14 @@ class OakDDriver:
             return
         else :
             color_string = color_found
-            if self.COLOR_DETECTED !=  color_string:
-                if not self.START_TIME_FLAG:
-                    self.START_TIME = time.time()
-                    self.START_TIME_FLAG = True
+            if self.get_color_detected() !=  color_string:
+                if not self.get_start_time_flag():
+                    self.get_start_time() = time.time()
+                    self.set_start_time_flag(True)
                 else:
-                    if time.time() - self.START_TIME > 3:
-                        self.COLOR_DETECTED = color_string
-                        self.START_TIME_FLAG = False
+                    if time.time() - self.get_start_time() > 3:
+                        self.set_color_detected(color_string)
+                        self.set_start_time_flag(False)
             else:
                 return
 

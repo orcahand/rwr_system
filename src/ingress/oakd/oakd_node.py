@@ -18,9 +18,6 @@ from faive_system.src.common.utils import numpy_to_float32_multiarray
 
 
 class OakDPublisher(Node):
-    COLOR_DETECTED = None
-    START_TIME_FLAG = False
-    START_TIME = 0
     def __init__(self, camera_dict=None):
         super().__init__("oakd_publisher")
         self.declare_parameter("visualize", False)
