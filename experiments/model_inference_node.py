@@ -12,6 +12,7 @@ from copy import deepcopy
 from cv_bridge import CvBridge, CvBridgeError
 import tf2_ros
 from threading import Lock
+import cv2
 
 import torch
 import yaml
@@ -119,10 +120,19 @@ class PolicyPlayerAgent(Node):
             print("Missing camera images", [im is not None for im in images.values()])
             return get_data_success, obs_dict
 
+        # images = {
+        #     k: self.bridge.imgmsg_to_cv2(v, "bgr8").transpose(2, 0, 1)/255.0
+        #     for k, v in images.items()
+        # }
+
         images = {
-            k: self.bridge.imgmsg_to_cv2(v, "bgr8").transpose(2, 0, 1)/255.0
+            k: cv2.resize(
+                    self.bridge.imgmsg_to_cv2(v, "bgr8"), 
+                    (224, 224)  # Target size (width, height)
+                ).transpose(2, 0, 1) / 255.0
             for k, v in images.items()
         }
+
 
         with self.lock:
             qpos_franka = self.current_wrist_state
@@ -141,6 +151,7 @@ class PolicyPlayerAgent(Node):
     def run_policy_cb(self):
 
         get_data_success, obs_dict = self.get_current_observations()
+        # raise NotImplementedError(f"Wrist view image size: {obs_dict['oakd_wrist_view_images'].shape}")
         if not get_data_success:
             self.get_logger().info("No observations available. Sleeping for 1 seconds.")
             sleep(1)
