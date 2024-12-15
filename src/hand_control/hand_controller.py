@@ -4,8 +4,8 @@ import time
 import yaml
 import os
 from threading import RLock
-import faive_system.src.hand_control.finger_kinematics as fk
-from faive_system.src.hand_control.dynamixel_client import *
+import faive_system.src.hand_control.finger_kinematics as fk # type: ignore
+from faive_system.src.hand_control.dynamixel_client import * # type: ignore
 from calibration import CalibrationClass
 
 class MuscleGroup:
@@ -60,7 +60,7 @@ class HandController(CalibrationClass):
 
         # initialize and connect dynamixels
         # self._dxc = DummyDynamixelClient(self.motor_ids, port, baudrate)
-        self._dxc = DynamixelClient(self.motor_ids, port, baudrate)
+        self._dxc = DynamixelClient(self.motor_ids, port, baudrate) # type: ignore
 
         self.connect_to_dynamixels()
 

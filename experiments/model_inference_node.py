@@ -124,6 +124,8 @@ class PolicyPlayerAgent(Node):
             for k, v in images.items()
         }
 
+        # images[""] = ... # Create masked image - key name same as ..._image.yaml
+
         with self.lock:
             qpos_franka = self.current_wrist_state
             qpos_hand = self.current_hand_state
