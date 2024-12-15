@@ -266,12 +266,28 @@ class OakDDriver:
                                 if has_depth:
                                     self.calibrate(color)
                             
+                            if self.calibrated == False:
+                                self.calibrate(color)
+                            
+                            
+                            color_yaml_path = os.path.join( os.path.dirname(os.path.abspath(__file__)), "get_color.yaml")            
+                            if not os.path.isfile(color_yaml_path):
+                                raise FileNotFoundError(f"Color file not found: {color_yaml_path}. \n Have you run the calibration script?")
+       
+                            with open(color_yaml_path, "r") as yaml_file:
+                                color_detected = yaml.safe_load(yaml_file)
+
+                            if color_detected not in ["red", "blue", "yellow"]:
+                                color_detected = None
+
+                            # color_detected = "yellow" # Blue 
+
                             if self.camera_name == "wrist_view":
-                                color, color_masks = get_cropped_and_collor_maps(color, "wrist", output_dir = None) 
+                                color, color_masks = get_cropped_and_collor_maps(color, "wrist", color_detected, output_dir = None) 
                             elif self.camera_name == "front_view":
-                                color, color_masks = get_cropped_and_collor_maps(color, "front", output_dir = None) 
+                                color, color_masks = get_cropped_and_collor_maps(color, "front", color_detected, output_dir = None) 
                             elif self.camera_name == "side_view":
-                                color, color_masks = get_cropped_and_collor_maps(color, "side", output_dir = None)
+                                color, color_masks = get_cropped_and_collor_maps(color, "side", color_detected, output_dir = None)
                             else:
                                 print(f"Camera name '{self.camera_name}' not recognized, using empty color masks")
                                 color_masks = np.zeros(color.shape, dtype=np.uint8)
@@ -283,7 +299,6 @@ class OakDDriver:
                               
                             color = cv2.resize(color, (224,224), interpolation=cv2.INTER_LINEAR)
                             color_masks = cv2.resize(color_masks, (224,224), interpolation=cv2.INTER_LINEAR)
-                            
 
                             if self.visualize:
                                 cv2.imshow("color", color)
