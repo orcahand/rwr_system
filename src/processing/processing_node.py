@@ -16,8 +16,6 @@ TOPICS_TO_SUBSCRIBE = {
     '/oakd_wrist_view/color': 'wrist'
 }
 
-
-
 class ColorProcessingNode(Node):
     def __init__(self):
         super().__init__('color_processing_node')
@@ -120,7 +118,8 @@ class ColorProcessingNode(Node):
         image_bgr = cv_image.copy()
 
         # Write algo for finding dominant color in the image
-        self.search_for_color(image_bgr, camera)
+        if camera != 'wrist':
+            self.search_for_color(image_bgr, camera)
 
         color_string = self.COLOR_DETECTED
 
@@ -128,7 +127,6 @@ class ColorProcessingNode(Node):
             image_cropped, masks_combined = get_cropped_and_collor_maps(image_bgr, camera, color_detected = None , output_dir=None)
             gray_image_masked = np.zeros_like(image_cropped)
         else: 
-            print("Here")
             image_cropped, masks_combined, gray_image_masked = get_cropped_and_collor_maps(image_bgr, camera, color_string, output_dir=None)
 
         image_cropped_resized  = cv2.resize(image_cropped, (224, 224))

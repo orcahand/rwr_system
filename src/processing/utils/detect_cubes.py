@@ -39,23 +39,6 @@ def detect_cubes(image_bgr, camera, output_dir = None):
             area = cv2.contourArea(contour)
             if area > 700:
                 color_detected[color] = True
-                # Use minAreaRect to get the rotated bounding box
-                # Comment this later
-                # rotated_rect = cv2.minAreaRect(contour)
-                # box_points = cv2.boxPoints(rotated_rect)  # Get the four points of the rectangle
-                # box_points = np.int0(box_points)  # Convert to integer
-
-                # # Get the width, height, and aspect ratio of the rotated bounding box
-                # width, height = rotated_rect[1]
-                # aspect_ratio = width / height if height != 0 else 1
-
-                # # # Determine if the object is a cube or a tray
-                # # if width + height < 100 and 0.6 < aspect_ratio < 1.6:
-                # #     # detected_objects["cubes"].append((color, rotated_rect[0][0], rotated_rect[0][1], width, height, Cx, Cy))
-                # #     cv2.drawContours(image, [box_points], 0, (255,0,0), 2)  # Draw the rotated rectangle
-                # # elif width + height < 300 and 0.6 < aspect_ratio < 1.6:
-                # #     # detected_objects["cubes"].append((color, rotated_rect[0][0], rotated_rect[0][1], width, height, Cx, Cy))
-                # #     cv2.drawContours(image, [box_points], 0, (255,0,0), 2)  # Draw the rotated rectangle
 
         # Save the annotated image
         if output_dir:
@@ -65,5 +48,13 @@ def detect_cubes(image_bgr, camera, output_dir = None):
 
     if len(true_colors) == 1:
         return true_colors[0]
+
+    # # Define the priority order
+    # priority_order = ["blue", "yellow", "red"]
     
+    # # Iterate through the priority list and return the first detected color
+    # for color in priority_order:
+    #     if color_detected[color]:
+    #         return color
+
     return None

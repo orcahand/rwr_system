@@ -53,45 +53,7 @@ def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_
         #     cv2.imwrite(os.path.join(output_dir, f"{camera_id}_{idx}.jpg"), image_masked)
         image_masked = cv2.rotate(image_masked, cv2.ROTATE_180)
         #     cv2.imwrite(os.path.join(output_dir, f"{camera_id}_{idx}_rotated.jpg"), image_masked)
-    # if camera_id == "front":
-    #         cv2.imwrite(os.path.join(output_dir, f"{camera_id}_{idx}.jpg"), image_masked)
-
-
-    # hsv = cv2.cvtColor(image_masked, cv2.COLOR_BGR2HSV)
-    # lab = cv2.cvtColor(image_masked, cv2.COLOR_BGR2LAB)
     
-    # color_ranges = {
-    #     "blue": [(69, 62, 45), (131, 255, 233)],
-    #     "yellow": [(9, 109, 89), (71, 255, 255)],
-    #     "red": [(10, 150, 125), (255, 200, 200)] # Red is LAB colorspace values
-    # }
-
-    # color_masks = {}
-    
-    # for color, (lower, upper) in color_ranges.items():
-    #     lower = np.array(lower)
-    #     upper = np.array(upper)
-        
-    #     # Use LAB for red, HSV for other colors
-    #     if color == "red":
-    #         color_mask = cv2.inRange(lab, lower, upper)
-    #     else:
-    #         color_mask = cv2.inRange(hsv, lower, upper)
-        
-    #     color_masks[color] = color_mask
-        
-    #     # Save the mask if output directory is provided
-    #     if output_dir:
-    #         os.makedirs(output_dir, exist_ok=True)
-    #         cv2.imwrite(os.path.join(output_dir, f"{camera_id}_{color}_mask.jpg"), color_mask)
-    
-    # blue_mask = color_masks.get("blue", np.zeros_like(mask))
-    # yellow_mask = color_masks.get("yellow", np.zeros_like(mask))
-    # red_mask = color_masks.get("red", np.zeros_like(mask))
-  
-    # Stack the masks to form a 3-channel image
-
-
     blue_mask, yellow_mask, red_mask = get_color_masks(image_masked)
     
     masks_combined = cv2.merge([blue_mask, yellow_mask, red_mask])
@@ -178,6 +140,47 @@ def calculate_crop_coordinates(mask_path, tolerance=1):
     x, y, w, h = cv2.boundingRect(coords)
 
     return x, y, w, h 
+
+
+# if camera_id == "front":
+    #         cv2.imwrite(os.path.join(output_dir, f"{camera_id}_{idx}.jpg"), image_masked)
+
+
+    # hsv = cv2.cvtColor(image_masked, cv2.COLOR_BGR2HSV)
+    # lab = cv2.cvtColor(image_masked, cv2.COLOR_BGR2LAB)
+    
+    # color_ranges = {
+    #     "blue": [(69, 62, 45), (131, 255, 233)],
+    #     "yellow": [(9, 109, 89), (71, 255, 255)],
+    #     "red": [(10, 150, 125), (255, 200, 200)] # Red is LAB colorspace values
+    # }
+
+    # color_masks = {}
+    
+    # for color, (lower, upper) in color_ranges.items():
+    #     lower = np.array(lower)
+    #     upper = np.array(upper)
+        
+    #     # Use LAB for red, HSV for other colors
+    #     if color == "red":
+    #         color_mask = cv2.inRange(lab, lower, upper)
+    #     else:
+    #         color_mask = cv2.inRange(hsv, lower, upper)
+        
+    #     color_masks[color] = color_mask
+        
+    #     # Save the mask if output directory is provided
+    #     if output_dir:
+    #         os.makedirs(output_dir, exist_ok=True)
+    #         cv2.imwrite(os.path.join(output_dir, f"{camera_id}_{color}_mask.jpg"), color_mask)
+    
+    # blue_mask = color_masks.get("blue", np.zeros_like(mask))
+    # yellow_mask = color_masks.get("yellow", np.zeros_like(mask))
+    # red_mask = color_masks.get("red", np.zeros_like(mask))
+  
+    # Stack the masks to form a 3-channel image
+
+
 
 
 # def detect_objects_from_masks(image, color_masks, detect_objects=True, output_dir=None):
