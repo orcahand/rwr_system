@@ -303,7 +303,7 @@ class OakDDriver:
                             if self.camera_name != "wrist_view":
                                 self.get_color(color, self.camera_name)
 
-                            color_detected = self.get_color_detected
+                            color_detected = self.get_color_detected()
 
                             if self.camera_name == "wrist_view":
                                 color, color_masks, image_gray = get_cropped_and_collor_maps(color, "wrist", color_detected, output_dir = None) 
@@ -394,7 +394,7 @@ class OakDDriver:
                     self.set_start_time(time.time())
                     self.set_start_time_flag(True)
                 else:
-                    if time.time() - self.get_start_time() > 5:
+                    if time.time() - self.get_start_time() > 4:
                         self.set_color_detected(color_string)
                         self.set_start_time_flag(False)
             else:

@@ -97,6 +97,7 @@ def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_
     image_gray = np.copy(gray_image_bgr)
 
     if color_detected:
+        print(color_detected)
         if color_detected == "blue":
             mask_channel = blue_mask
         elif color_detected == "yellow":

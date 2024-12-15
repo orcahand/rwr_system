@@ -13,14 +13,24 @@ def detect_cubes(image_bgr, camera, output_dir = None):
     image = image_bgr.copy()
     blue_mask, yellow_mask, red_mask = get_color_masks(image)
 
-    if camera == "front":
+    if camera == "front_view":
         mask = cv2.imread(FRONT_CUBES_MASK_PATH, cv2.IMREAD_GRAYSCALE)
-    elif camera == "side":
+    elif camera == "side_view":
         mask = cv2.imread(SIDE_CUBES_MASK_PATH, cv2.IMREAD_GRAYSCALE)
 
     blue_mask = cv2.bitwise_and(blue_mask, mask)
     yellow_mask = cv2.bitwise_and(yellow_mask, mask)
     red_mask = cv2.bitwise_and(red_mask, mask)
+
+    # if camera == "front_view":
+
+    #     cv2.imwrite("Fblue_mask.jpg", blue_mask)
+    #     cv2.imwrite("Fyellow_mask.jpg", yellow_mask)
+    #     cv2.imwrite("Fred_mask.jpg", red_mask)
+    # else:
+    #     cv2.imwrite("Sblue_mask.jpg", blue_mask)
+    #     cv2.imwrite("Syellow_mask.jpg", yellow_mask)
+    #     cv2.imwrite("Sred_mask.jpg", red_mask)
 
     color_detected = {"blue": False, "yellow": False, "red": False}
 
