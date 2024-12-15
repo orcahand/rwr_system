@@ -180,6 +180,7 @@ class OakDPublisher(Node):
                     self.camera_dict[camera_name]["calibrated"] = True
                     
                 except Exception as e:
+                    # raise NotImplementedError(camera_name)
                     if camera_name == "wrist_view":
                         pass
                     else:
