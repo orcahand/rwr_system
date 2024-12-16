@@ -22,17 +22,17 @@ def generate_launch_description():
     return LaunchDescription(
         [
             # CAMERA INGRESS NODE
-            Node(
-                package="ingress",
-                executable="oakd_node.py",
-                name="oakd_node",
-                output="log",
-                parameters=[
-                    {"enable_front_camera": cameras["front_view"]},
-                    {"enable_side_camera": cameras["side_view"]},
-                    {"enable_wrist_camera": cameras["wrist_view"]},
-                ],
-            ),
+            # Node(
+            #     package="ingress",
+            #     executable="oakd_node.py",
+            #     name="oakd_node",
+            #     output="log",
+            #     parameters=[
+            #         {"enable_front_camera": cameras["front_view"]},
+            #         {"enable_side_camera": cameras["side_view"]},
+            #         {"enable_wrist_camera": cameras["wrist_view"]},
+            #     ],
+            # ),
             
             Node(
                 package="ingress",

@@ -46,18 +46,18 @@ def detect_cubes(image_bgr, camera, output_dir = None):
         if output_dir:
             cv2.imwrite(os.path.join(output_dir, f"{color}_annotated_image.jpg"), mask)
         
-    true_colors = [color for color, detected in color_detected.items() if detected]
+    # true_colors = [color for color, detected in color_detected.items() if detected]
 
-    if len(true_colors) == 1:
-        return true_colors[0]
+    # if len(true_colors) == 1:
+    #     return true_colors[0]
 
-    # # Define the priority order
-    # priority_order = ["blue", "yellow", "red"]
+    # Define the priority order
+    priority_order = ["blue", "yellow", "red"]
     
-    # # Iterate through the priority list and return the first detected color
-    # for color in priority_order:
-    #     if color_detected[color]:
-    #         return color
+    # Iterate through the priority list and return the first detected color
+    for color in priority_order:
+        if color_detected[color]:
+            return color
 
     return None
 
