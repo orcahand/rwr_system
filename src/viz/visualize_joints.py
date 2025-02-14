@@ -5,18 +5,31 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Float32MultiArray
 import yaml
 import os
+from visualization_msgs.msg import Marker, MarkerArray
+from geometry_msgs.msg import Point, PointStamped
+import time
+import math
+import tf2_ros
+import tf2_geometry_msgs
 
 
 class VisualizeJointsNode(Node):
-    def __init__(self):
+    def __init__(self, debug=False):
         super().__init__("visualize_joints_node")
         self.subscription = self.create_subscription(
             Float32MultiArray, "/hand/policy_output", self.policy_output_callback, 10
         )
+        self.subscription = self.create_subscription(
+            Float32MultiArray, "/pressure_readings", self.pressure_sensor_callback, 10
+        )
         self.publisher_ = self.create_publisher(JointState, "/joint_states", 10)
+        self.marker_publisher = self.create_publisher(MarkerArray, "/sensor_visualization_marker", 10)
         self.get_logger().info('Subscribing to "/hand/policy_output"')
         self.get_logger().info('Publishing to "/joint_states"')
         self.declare_parameter('scheme_path', "")
+        self.declare_parameter("debug", True)
+        self.debug = self.get_parameter("debug").value
+
         scheme_path = self.get_parameter("scheme_path").value
         print(f"Reading hand scheme from {scheme_path}")
         # Read the YAML file directly
@@ -46,8 +59,44 @@ class VisualizeJointsNode(Node):
         self.js_msg = JointState()
         self.js_msg.name = self.joint_names
 
+        self.marker_array = MarkerArray()
+        fingertip_names = ["thumb_fingertip", "index_fingertip", "middle_fingertip", "ring_fingertip", "pinky_fingertip"]
+        
+        for i, fingertip_name in enumerate(fingertip_names):
+            marker = Marker()
+            marker.header.frame_id = fingertip_name
+            marker.ns = "sensors"
+            marker.id = i
+            marker.type = Marker.SPHERE
+            marker.action = Marker.ADD
+            marker.scale.x = 0.02
+            marker.scale.y = 0.02
+            marker.scale.z = 0.02
+            marker.color.r = 1.0
+            marker.color.g = 0.0
+            marker.color.b = 0.0
+            marker.pose.position = Point(x=0.0, y=0.005, z=-0.01)
+            marker.pose.orientation.w = 1.0
+            self.marker_array.markers.append(marker)
+  
+
+    def pressure_sensor_callback(self, msg):
+        pressure_values = msg.data
+        for i, pressure in enumerate(pressure_values):
+            if i < len(self.marker_array.markers):
+                if pressure < 5:
+                    opacity = 0.0
+                else:
+                    opacity = max(0.0, min(1.0, (pressure - 5) / 55.0))  # Interpolate opacity from 10 to 60
+                # opacity = max(0.0, min(1.0, pressure / 60.0))  # Interpolate opacity
+                self.marker_array.markers[i].color.a = opacity
+        self.marker_publisher.publish(self.marker_array)
+
+
     def policy_output_callback(self, msg):
         
+        if self.debug:
+            msg.data = [0.0] * 17
         self.js_msg.header.stamp = self.get_clock().now().to_msg()
         joint_states = self.policy_output2urdf_joint_states(msg.data)
         self.js_msg.position = joint_states

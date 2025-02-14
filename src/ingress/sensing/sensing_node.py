@@ -4,7 +4,7 @@ import threading
 import rclpy
 from rclpy.node import Node
 import time
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Float32MultiArray
 from faive_system.src.ingress.sensing.sensing_ingress import ArduinoDriver
 
 class SensorPublisher(Node):
@@ -42,20 +42,24 @@ class SensorPublisher(Node):
         fsr_sensor_names = ["thumb", "index", "middle", "ring", "pinky"]
         for sensor_name in fsr_sensor_names:
             self.sensing_data["fsr"][sensor_name] = 0.0
-            topic_name = f"fsr/{sensor_name}"
-            self.sensor_publishers["fsr"][sensor_name] = self.create_publisher(Float32, topic_name, 10)
+            # topic_name = f"fsr/{sensor_name}"
+            # self.sensor_publishers["fsr"][sensor_name] = self.create_publisher(Float32, topic_name, 10)
         
         pressure_sensor_names = ["thumb", "index", "middle", "ring", "pinky"]
         for sensor_name in pressure_sensor_names:
             self.sensing_data["pressure"][sensor_name] = 0.0
-            topic_name = f"pressure/{sensor_name}"
-            self.sensor_publishers["pressure"][sensor_name] = self.create_publisher(Float32, topic_name, 10)
+            # topic_name = f"pressure/{sensor_name}"
+            # self.sensor_publishers["pressure"][sensor_name] = self.create_publisher(Float32, topic_name, 10)
+        
+        # Create publishers for the sensor arrays
+        self.pressure_publisher = self.create_publisher(Float32MultiArray, "pressure_readings", 10)
+        self.fsr_publisher = self.create_publisher(Float32MultiArray, "fsr_readings", 10)
         
         self.calibrate_sensors()
         
     def calibrate_sensors(self):
         self.get_logger().info("Calibrating sensors")
-        time.sleep(0.5)
+        time.sleep(1)
         calibration_data = {"pressure": {sensor: [] for sensor in self.sensing_data["pressure"]},
                     "fsr": {sensor: [] for sensor in self.sensing_data["fsr"]}}
 
@@ -96,18 +100,20 @@ class SensorPublisher(Node):
         
         with self.sensing_data_lock:
             # Publish pressure sensor data
-            for sensor_name, sensor_value in self.sensing_data["pressure"].items():
-                msg = Float32()
-                relative_value = sensor_value - self.calibration_offsets["pressure"][sensor_name]
-                msg.data = relative_value
-                self.sensor_publishers["pressure"][sensor_name].publish(msg)
+            pressure_msg = Float32MultiArray()
+            pressure_msg.data = [
+                self.sensing_data["pressure"][sensor_name] - self.calibration_offsets["pressure"][sensor_name]
+                for sensor_name in ["thumb", "index", "middle", "ring", "pinky"]
+            ]
+            self.pressure_publisher.publish(pressure_msg)
 
             # Publish FSR sensor data
-            for sensor_name, sensor_value in self.sensing_data["fsr"].items():
-                msg = Float32()
-                relative_value = sensor_value - self.calibration_offsets["fsr"][sensor_name]
-                msg.data = relative_value
-                self.sensor_publishers["fsr"][sensor_name].publish(msg)
+            fsr_msg = Float32MultiArray()
+            fsr_msg.data = [
+                self.sensing_data["fsr"][sensor_name] - self.calibration_offsets["fsr"][sensor_name]
+                for sensor_name in ["thumb", "index", "middle", "ring", "pinky"]
+            ]
+            self.fsr_publisher.publish(fsr_msg)
 
 def main():
     rclpy.init()

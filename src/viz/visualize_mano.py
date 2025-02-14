@@ -3,25 +3,12 @@ from rclpy.node import Node
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Point
 import numpy as np
-from std_msgs.msg import Float32
 
 
-class ManoHandVisualizer(Node):
+class ManoHandVisualizer:
     def __init__(self, marker_publisher):
         self.marker_publisher = marker_publisher
         self.markers = []
-        
-        self.pressure_index = 0
-        self.pressure_index_subscription = self.create_subscription(
-            Float32,
-            'pressure/index/',
-            self.pressure_index_callback,
-            10
-        )
-        
-    def pressure_index_callback(self, msg):
-        self.pressure_index = msg.data
-        
 
     def reset_markers(self):
         self.markers = []
@@ -59,36 +46,18 @@ class ManoHandVisualizer(Node):
         joint_marker.action = Marker.ADD
         joint_marker.scale.x = 0.01  # Point width
         joint_marker.scale.y = 0.01  # Point height
-        joint_marker.color.a = 0.5
+        joint_marker.color.a = 1.0
         joint_marker.color.r = 1.0  # Red color
-        
-        # create dip indices marker 
-        joint_marker_index_dip = Marker()
-        joint_marker_index_dip.header.frame_id = "hand_root"
-        joint_marker_index_dip.header.stamp = stamp
-        joint_marker_index_dip.ns = "joints"
-        joint_marker_index_dip.type = Marker.POINTS
-        joint_marker_index_dip.action = Marker.ADD
-        joint_marker_index_dip.scale.x = self.pressure_index/100  # Point width
-        joint_marker_index_dip.scale.y = self.pressure_index/100  # Point height
-        joint_marker_index_dip.color.a = 0.5
-        joint_marker_index_dip.color.g = 1.0  # Green color
+        joint_marker.color.g = 1.0  # Green color
+        joint_marker.color.b = 1.0  # Blue color
 
-
-        index_dp = 9
-        
         # Add joint points
-        for i, joint in enumerate(joints):
+        for joint in joints:
             joint = float(joint[0]), float(joint[1]), float(joint[2])
             p = Point(x=joint[0], y=joint[1], z=joint[2])
             joint_marker.points.append(p)
-            
-            if i == index_dp:
-                joint_marker_index_dip.points.append(p)
-            
 
         markers.append(joint_marker)
-        markers.append(joint_marker_index_dip)
 
         # Create marker for bones
         bones = [
@@ -122,8 +91,10 @@ class ManoHandVisualizer(Node):
         bone_marker.type = Marker.LINE_LIST
         bone_marker.action = Marker.ADD
         bone_marker.scale.x = 0.005  # Line width
-        bone_marker.color.a = 0.5
-        bone_marker.color.b = 1.0  # Blue color
+        bone_marker.color.a = 1.0
+        bone_marker.color.r = 0.0  # Red component
+        bone_marker.color.g = 0.0  # Green component
+        bone_marker.color.b = 0.0  # Blue component
 
         # Add bone lines
         for bone in bones:
@@ -137,7 +108,6 @@ class ManoHandVisualizer(Node):
             bone_marker.points.append(p_end)
 
         markers.append(bone_marker)
-
         self.markers.extend(markers)    
 
     def generate_frame_markers(self, origin, x_axis, y_axis, z_axis, stamp):
