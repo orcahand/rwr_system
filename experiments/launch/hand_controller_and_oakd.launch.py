@@ -7,6 +7,11 @@ from ament_index_python.packages import get_package_share_directory
 
 cameras = {"front_view": True, "side_view": True, "wrist_view": True}
 
+porcessing_config = {
+    "grayed_images_with_colored_mask": True,
+    "color_string": True,
+}
+
 
 def generate_launch_description():
     urdf = os.path.join(
@@ -35,6 +40,18 @@ def generate_launch_description():
                 ],
             ),
             
+            # PROCESSING NODE
+            Node(
+                package="processing",
+                executable="processing_node.py",
+                name="processing_node",
+                output="screen",
+                parameters=[
+                    {"grayed_images_with_colored_mask": porcessing_config["grayed_images_with_colored_mask"]},
+                    {"color_string": porcessing_config["color_string"]},
+                ],
+            ),
+            
 
             # HAND CONTROLLER NODE
             Node(
@@ -45,37 +62,37 @@ def generate_launch_description():
             ),
             
  # VISUALIZATION NODE
-            Node(
-                package="viz",
-                executable="visualize_joints.py",
-                name="visualize_joints",
-                parameters=[
-                    {
-                        "scheme_path": os.path.join(
-                            get_package_share_directory("viz"),
-                            "models",
-                            "orca2_hand",
-                            "scheme_orca2.yaml",
-                        )
-                    }
-                ],
-                output="screen",
-            ),
+            # Node(
+            #     package="viz",
+            #     executable="visualize_joints.py",
+            #     name="visualize_joints",
+            #     parameters=[
+            #         {
+            #             "scheme_path": os.path.join(
+            #                 get_package_share_directory("viz"),
+            #                 "models",
+            #                 "orca2_hand",
+            #                 "scheme_orca2.yaml",
+            #             )
+            #         }
+            #     ],
+            #     output="screen",
+            # ),
 
-            Node(
-                package='robot_state_publisher',
-                executable='robot_state_publisher',
-                name='robot_state_publisher',
-                output='screen',
-                parameters=[{'robot_description': robot_desc,}],
-                arguments=[urdf]),
+            # Node(
+            #     package='robot_state_publisher',
+            #     executable='robot_state_publisher',
+            #     name='robot_state_publisher',
+            #     output='screen',
+            #     parameters=[{'robot_description': robot_desc,}],
+            #     arguments=[urdf]),
             
-            Node(
-                package='rviz2',
-                executable='rviz2',
-                name='rviz2',
-                output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
-                ),
+            # Node(
+            #     package='rviz2',
+            #     executable='rviz2',
+            #     name='rviz2',
+            #     output='screen', 
+            #     arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
+            #     ),
         ]
     )

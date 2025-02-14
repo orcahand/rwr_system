@@ -455,7 +455,7 @@ class Retargeter:
         # TODO: Make the thumb rotate even more!
         normalized_joint_pos = (
             retarget_utils.correct_rokoko_offset(normalized_joint_pos, 
-                                                 offset_angle=15, scaling_factor=2)
+                                                 offset_angle=10, scaling_factor=2)
         )
         # rotate joints about z xis 15 degrees
         normalized_joint_pos = self.adjust_mano_fingers(normalized_joint_pos)
