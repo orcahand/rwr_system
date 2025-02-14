@@ -80,6 +80,18 @@ def generate_launch_description():
 
                 ],
             ),
+            
+            # SENSING NODE
+            Node(
+                package="ingress",
+                executable="sensing_node.py",
+                name="sensing_node",
+                output="log",
+                parameters=[
+                    {"baud_rate": 115200},
+                    {"device": "/dev/ttyACM0"},
+                ],
+            ),
 
         
             # VISUALIZATION NODE
@@ -95,7 +107,9 @@ def generate_launch_description():
                             "orca2_hand",
                             "scheme_orca2.yaml",
                         )
-                    }
+                    },
+                    {"freeze_joints": False},
+                    {"sensor_viz": True},
                 ],
                 output="screen",
             ),
