@@ -75,7 +75,7 @@ def generate_launch_description():
                             "retargeter_cfgs_orca1.yaml"
                         ),
                     },
-                    {"debug": False},
+                    {"debug": True},
                     {"include_wrist_and_tower": True},
 
                 ],
@@ -108,7 +108,8 @@ def generate_launch_description():
                             "scheme_orca2.yaml",
                         )
                     },
-                    {"debug": True},
+                    {"freeze_joints": False},
+                    {"sensor_viz": True},
                 ],
                 output="screen",
             ),
