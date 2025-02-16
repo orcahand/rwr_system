@@ -7,15 +7,15 @@ import yaml
 import math
 import time
 
-class ReliabilityNode(Node):
+class AccuracyNode(Node):
     def __init__(self):
-        super().__init__("reliability_node")
+        super().__init__("accuracy_node")
         self.publisher_ = self.create_publisher(Float32MultiArray, "/hand/policy_output", 10)
         
         self.motion_duration = self.declare_parameter("motion_duration", 10.0).value
         self.recalibration_interval = self.declare_parameter("recalibration_interval", 60.0).value
         self.flexion_scalar = self.declare_parameter("flexion_scalar", 1.0).value
-        
+  
         self.start_time = time.time()
         self.last_recalibration_time = self.start_time
         self.calibration_in_progress = False
@@ -38,12 +38,16 @@ class ReliabilityNode(Node):
         gc_limits_lower = np.deg2rad(np.array(hand_scheme["gc_limits_lower"]))
         gc_limits_upper = np.deg2rad(np.array(hand_scheme["gc_limits_upper"])) * self.flexion_scalar
 
-        for index in [0, 1, 5, 8, 11, 14]:
-            gc_limits_lower[index] = 0.0
-            gc_limits_upper[index] = 0.0
+        for index in range(len(gc_limits_lower)):
+            if index not in [1, 6, 7]:
+                gc_limits_lower[index] = 0.0
+                gc_limits_upper[index] = 0.0
 
-        gc_limits_lower[2] = np.deg2rad(20) #  rotate thumb to for better grasp (watch out - hard coded for old model)
-        gc_limits_upper[2] = np.deg2rad(20)
+        # move the thumb away, such that markers on index can be seen better (watch out - hard coded for old model)
+        gc_limits_lower[1] = np.deg2rad(45) 
+        gc_limits_upper[1] = np.deg2rad(45)
+        gc_limits_lower[2] = np.deg2rad(40)
+        gc_limits_upper[2] = np.deg2rad(40)
 
         return gc_limits_lower, gc_limits_upper
 
@@ -75,7 +79,7 @@ class ReliabilityNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = ReliabilityNode()
+    node = AccuracyNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

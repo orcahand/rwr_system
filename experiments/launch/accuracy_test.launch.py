@@ -36,13 +36,13 @@ def generate_launch_description():
             # RELIABILITY TEST NODE
             Node(
                 package="ingress",
-                executable="reliability_node.py",
-                name="reliability_node",
+                executable="accuracy_node.py",
+                name="accuracy_node",
                 output="log",
                 parameters=[
                     {"motion_duration": 4.0},
                     {"recalibration_interval": 10.0},
-                    {"flexion_scalar": 0.5},
+                    {"flexion_scalar": 0.8},
                     {"retarget/hand_scheme": os.path.join(
                         get_package_share_directory("viz"),
                         "models",
