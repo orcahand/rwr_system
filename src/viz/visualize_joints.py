@@ -26,7 +26,7 @@ class VisualizeJointsNode(Node):
         self.get_logger().info('Subscribing to "/hand/policy_output"')
         self.get_logger().info('Publishing to "/joint_states"')
         self.declare_parameter('scheme_path', "")
-        self.declare_parameter("freeze_joints", True)
+        self.declare_parameter("freeze_joints", False)
         self.declare_parameter("sensor_viz", False)
 
         self.freeze_joints = self.get_parameter("freeze_joints").value
