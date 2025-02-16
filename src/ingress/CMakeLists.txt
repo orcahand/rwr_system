@@ -35,6 +35,10 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+    paper_experiments/reliability_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 install(PROGRAMS
     rokoko/rokoko_node.py
