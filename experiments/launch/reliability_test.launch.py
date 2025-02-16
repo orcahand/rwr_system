@@ -42,6 +42,7 @@ def generate_launch_description():
                 parameters=[
                     {"motion_duration": 4.0},
                     {"recalibration_interval": 10.0},
+                    {"flexion_scalar": 0.5},
                     {"retarget/hand_scheme": os.path.join(
                         get_package_share_directory("viz"),
                         "models",

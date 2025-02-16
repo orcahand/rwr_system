@@ -14,6 +14,9 @@ class ReliabilityNode(Node):
         
         self.motion_duration = self.declare_parameter("motion_duration", 10.0).value
         self.recalibration_interval = self.declare_parameter("recalibration_interval", 60.0).value
+        self.flexion_scalar = self.declare_parameter("flexion_scalar", 1.0).value
+
+
         
         self.start_time = time.time()
         self.last_recalibration_time = self.start_time
@@ -35,7 +38,7 @@ class ReliabilityNode(Node):
      
     def get_joint_limits(self, hand_scheme):
         gc_limits_lower = np.deg2rad(np.array(hand_scheme["gc_limits_lower"]))
-        gc_limits_upper = np.deg2rad(np.array(hand_scheme["gc_limits_upper"]))
+        gc_limits_upper = np.deg2rad(np.array(hand_scheme["gc_limits_upper"])) * self.flexion_scalar
 
         for index in [0, 1, 5, 8, 11, 14]:
             gc_limits_lower[index] = 0.0
