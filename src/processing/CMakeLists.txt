@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(ingress)
+project(processing)
 
 ## Use C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -28,35 +28,9 @@ find_package(tf2_eigen REQUIRED)
 ## Install ##
 #############
 
-install(PROGRAMS
-    oakd/oakd_node.py
-    oakd/oakd_ingress.py
-    oakd/oakd_utils.py
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 install(PROGRAMS
-    paper_experiments/reliability_node.py
-    paper_experiments/accuracy_node.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-install(PROGRAMS
-    rokoko/rokoko_node.py
-    rokoko/rokoko_ingress.py
-    rokoko/rosbag_node.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-install(PROGRAMS
-    webcam/webcam_mediapipe_ingress.py
-    webcam/mediapipe_node.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-install(PROGRAMS
-    sensing/sensing_node.py
-    sensing/sensing_ingress.py
+    processing_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
