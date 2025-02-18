@@ -15,7 +15,8 @@ class AccuracyNode(Node):
         self.motion_duration = self.declare_parameter("motion_duration", 10.0).value
         self.recalibration_interval = self.declare_parameter("recalibration_interval", 60.0).value
         self.flexion_scalar = self.declare_parameter("flexion_scalar", 1.0).value
-  
+        self.signal_type = self.declare_parameter("signal_type", "sine").value  # New parameter for signal type
+
         self.start_time = time.time()
         self.last_recalibration_time = self.start_time
         self.calibration_in_progress = False
@@ -56,8 +57,12 @@ class AccuracyNode(Node):
         current_time = time.time() - self.start_time
         elapsed_time_since_recalibration = time.time() - self.last_recalibration_time
 
-        sine_wave = (-math.cos(current_time * (2 * math.pi / self.motion_duration)) + 1) / 2
-        self.joint_values = (1 - sine_wave) * self.gc_limits_lower + sine_wave * self.gc_limits_upper
+        if self.signal_type == "sine":
+            sine_wave = (-math.cos(current_time * (2 * math.pi / self.motion_duration)) + 1) / 2
+            self.joint_values = (1 - sine_wave) * self.gc_limits_lower + sine_wave * self.gc_limits_upper
+        elif self.signal_type == "step":
+            step_wave = 1 if (current_time % self.motion_duration) < (self.motion_duration / 2) else 0
+            self.joint_values = (1 - step_wave) * self.gc_limits_lower + step_wave * self.gc_limits_upper
 
         if elapsed_time_since_recalibration >= self.recalibration_interval and np.allclose(self.joint_values, self.gc_limits_lower, atol=0.1):
             self.timer.cancel() # Cancel the timer
