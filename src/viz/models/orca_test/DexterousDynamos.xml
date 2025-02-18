@@ -1,0 +1,142 @@
+<mujoco model="DexterousDynamos">
+	<compiler angle="radian"/>
+	<default>
+		<geom rgba="1 1 1 1" type="mesh" friction="1 0.005 0.001" condim="3" margin="0.0005" contype="1" conaffinity="1"/>
+		<joint type="hinge" limited="true" damping="0.1" armature="0.001" margin="0.01" frictionloss="0.001"/>
+		<position ctrllimited="true" forcelimited="true" forcerange="-1 1" kp="2.0"/>
+		<mesh scale="0.001 0.001 0.001"/>
+	</default>
+	<asset>
+		<mesh name="AP-Assembly" file="assets/AP-Assembly.stl"/>
+		<mesh name="MiddleFinger" file="assets/MiddleFinger.stl"/>
+		<mesh name="T-AP-Assembly" file="assets/T-AP-Assembly.stl"/>
+		<mesh name="CarpalsAssembly" file="assets/CarpalsAssembly.stl"/>
+		<mesh name="FingerTipAssembly" file="assets/FingerTipAssembly.stl"/>
+		<mesh name="ThumbAssembly" file="assets/ThumbAssembly.stl"/>
+		<mesh name="I-PP-Assembly" file="assets/I-PP-Assembly.stl"/>
+		<mesh name="M-PP-Assembly" file="assets/M-PP-Assembly.stl"/>
+		<mesh name="TowerAssembly" file="assets/TowerAssembly.stl"/>
+		<mesh name="IndexFinger" file="assets/IndexFinger.stl"/>
+		<mesh name="PinkyFinger" file="assets/PinkyFinger.stl"/>
+		<mesh name="ThumbTipAssembly" file="assets/ThumbTipAssembly.stl"/>
+		<mesh name="T-TP-Assembly" file="assets/T-TP-Assembly.stl"/>
+		<mesh name="P-PP-Assembly" file="assets/P-PP-Assembly.stl"/>
+		<mesh name="RingFinger" file="assets/RingFinger.stl"/>
+	</asset>
+	<worldbody>
+		<body name="root" quat="1.0 0.0 0.0 0.0">
+			<body name="TowerAssembly_8e26df17" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0">
+				<body name="CarpalsAssembly_a3f178b9" pos="0.03862890845062728 0.0014412498723578074 0.14109038811689056" quat="1.0 -3.0616169978683886e-17 -2.2204460492503136e-16 9.714451465470105e-17">
+					<body name="T-TP-Assembly_8f310e51" pos="-0.03118350558327121 0.027675165636026754 -0.007674328988471495" quat="0.30673828436873996 -0.7354124897868741 0.6041400016798182 -0.009744390093888075">
+						<body name="T-AP-Assembly_b68d2db9" pos="-0.03000000000000002 -2.42861286636753e-17 -1.8214596497756474e-17" quat="0.573576436351046 0.8191520442889919 0.0 -1.1102230246251565e-16">
+							<body name="P-PP-Assembly_4e31112a" pos="4.708523807784693e-17 1.513645907263937e-16 -4.2834101494079344e-17" quat="-4.996003610813204e-16 -0.7071067811865476 7.216449660063518e-16 0.7071067811865474">
+								<body name="ThumbTipAssembly_da16f050" pos="0.0004999999999845258 1.960237527853792e-16 0.03299999999999989" quat="0.9999999999999996 -2.220446049250313e-16 -2.0816681711721685e-16 -5.551115123125783e-16">
+									<joint name="ThumbTipAssembly_da16f050_joint" pos="-0.13725528249709146 -0.09083064955243778 -0.11281689327909648" axis="-1.3877787807814457e-16 -1.0000000000000018 1.6653345369377348e-16" range="-0.3490658503988659 1.7453292519943295"/>
+									<geom mesh="ThumbTipAssembly"/>
+								</body>
+								<joint name="P-PP-Assembly_4e31112a_joint" pos="-0.12493716415002687 -0.08077510107426261 -0.10269202363708826" axis="-1.27675647831893e-15 -0.9999999999999994 4.996003610813204e-16" range="-0.3490658503988659 2.007128639793479"/>
+								<geom mesh="P-PP-Assembly"/>
+							</body>
+							<joint name="T-AP-Assembly_b68d2db9_joint" pos="0.05637594511670266 -0.011460195463730501 0.0063916678614429154" axis="-1.1102230246251565e-16 0.34202014332566866 0.9396926207859075" range="-0.7853981633974483 0.7853981633974483"/>
+							<geom mesh="T-AP-Assembly"/>
+						</body>
+						<joint name="T-TP-Assembly_8f310e51_joint" pos="0.016999999999975042 6.852157730108388e-17 2.7301511745791984e-14" axis="-2.920774733183862e-12 3.3306690738754696e-16 1.0000000000000002" range="-0.9250245035569946 0.8377580409572782"/>
+						<geom mesh="T-TP-Assembly"/>
+					</body>
+					<body name="AP-Assembly_22c0dde4" pos="-0.03219649781676012 0.0023248750738696024 0.04344008658721097" quat="0.5712969039961256 0.6133821562881893 0.36239418910617205 -0.4074955576859359">
+						<body name="I-PP-Assembly_32ddceb4" pos="0.0 0.0 0.0" quat="0.7071067811865477 -5.551115123125783e-17 -0.7071067811865475 0.0">
+							<body name="FingerTipAssembly_cc9cd17e" pos="0.0004999999999839647 6.938893903907228e-18 0.03799999999999994" quat="1.0 0.0 2.7755575615628914e-17 5.551115123125783e-17">
+								<joint name="FingerTipAssembly_cc9cd17e_joint" pos="-4.506562989359519e-18 5.895358766575946e-17 6.487401240321147e-17" axis="-1.1102230246251565e-15 -0.9999999999999998 -8.326672684688674e-17" range="-0.3490658503988659 2.2689280275926285"/>
+								<geom mesh="FingerTipAssembly"/>
+							</body>
+							<joint name="I-PP-Assembly_32ddceb4_joint" pos="-1.0554991142341346e-17 5.844005384212486e-17 6.500169455539819e-17" axis="-1.1102230246251565e-15 -0.9999999999999998 -8.326672684688674e-17" range="-0.3490658503988659 1.9198621771937625"/>
+							<geom mesh="I-PP-Assembly"/>
+						</body>
+						<joint name="AP-Assembly_22c0dde4_joint" pos="0.020000000000000052 -2.3852447794681098e-18 4.336808689942018e-19" axis="4.163336342344337e-17 9.992007221626409e-16 -1.0000000000000013" range="-0.5235987755982988 0.5235987755982988"/>
+						<geom mesh="AP-Assembly"/>
+					</body>
+					<body name="AP-Assembly_8fe40f7e" pos="0.055183221766068616 0.008313798880845111 0.022423955548036893" quat="0.3673943353744606 0.22390383846930376 0.6525627977313669 -0.6237389425636992">
+						<body name="P-PP-Assembly_c1041f9e" pos="8.45178423300355e-18 -1.0204819466498632e-17 -4.475629889943052e-18" quat="0.7071067811865476 -1.1102230246251565e-16 -0.7071067811865474 1.6653345369377348e-16">
+							<body name="FingerTipAssembly_28a83376" pos="0.0004999999999844955 3.469446951953614e-17 0.03299999999999998" quat="1.0 -5.551115123125783e-17 0.0 -5.551115123125783e-17">
+								<joint name="FingerTipAssembly_28a83376_joint" pos="-4.630531374131085e-18 -3.7088372491485756e-17 -3.145406773126967e-17" axis="-2.7755575615628914e-16 -1.0000000000000007 -2.498001805406602e-16" range="-0.3490658503988659 2.2689280275926285"/>
+								<geom mesh="FingerTipAssembly"/>
+							</body>
+							<joint name="P-PP-Assembly_c1041f9e_joint" pos="3.4409772224679328e-18 3.9175276362032155e-17 1.0647123163719203e-16" axis="-1.6653345369377348e-16 -1.0000000000000004 -2.220446049250313e-16" range="-0.3490658503988659 1.9198621771937625"/>
+							<geom mesh="P-PP-Assembly"/>
+						</body>
+						<joint name="AP-Assembly_8fe40f7e_joint" pos="0.020000000000000014 2.42861286636753e-17 6.071532165918825e-18" axis="1.942890293094024e-16 -5.551115123125783e-16 -0.9999999999999997" range="-0.5235987755982988 0.5235987755982988"/>
+						<geom mesh="AP-Assembly"/>
+					</body>
+					<body name="AP-Assembly_0c2e1cd6" pos="-7.819110489514213e-34 -8.04894699130166e-18 0.04999999999999999" quat="0.5 0.5000000000000001 0.49999999999999994 -0.5000000000000001">
+						<body name="M-PP-Assembly_8bc6ddb7" pos="0.0 0.0 0.0" quat="0.7071067811865476 0.0 -0.7071067811865475 0.0">
+							<body name="FingerTipAssembly_a13adc36" pos="0.0004999999999727618 -3.469446951953614e-18 0.04600000000000007" quat="1.0 0.0 0.0 0.0">
+								<joint name="FingerTipAssembly_a13adc36_joint" pos="5.421010862428354e-19 1.0168910106364605e-31 8.326672684688675e-17" axis="1.1102230246251565e-16 -1.0000000000000004 -2.7755575615628914e-17" range="-0.3490658503988659 2.2689280275926285"/>
+								<geom mesh="FingerTipAssembly"/>
+							</body>
+							<joint name="M-PP-Assembly_8bc6ddb7_joint" pos="8.011868568650901e-32 1.0477058897466563e-31 8.326672684688675e-17" axis="1.1102230246251565e-16 -1.0000000000000004 -2.7755575615628914e-17" range="-0.3490658503988659 1.9198621771937625"/>
+							<geom mesh="M-PP-Assembly"/>
+						</body>
+						<joint name="AP-Assembly_0c2e1cd6_joint" pos="0.019999999999999987 3.771356811665857e-18 -1.701695755040975e-18" axis="-9.645057161491277e-31 -1.6653345369377348e-16 -0.9999999999999998" range="-0.5235987755982988 0.5235987755982988"/>
+						<geom mesh="AP-Assembly"/>
+					</body>
+					<body name="AP-Assembly_a3d92f10" pos="0.02668522427376689 0.0019917457033393317 0.04013715734793663" quat="0.4471963219974949 0.4132691663178327 0.5698177506584137 -0.5518439786728336">
+						<body name="M-PP-Assembly_c004e538" pos="0.0 0.0 0.0" quat="0.7071067811865477 0.0 -0.7071067811865476 0.0">
+							<body name="FingerTipAssembly_bc7e70d7" pos="0.0004999999999727601 1.5612511283791264e-17 0.04600000000000003" quat="1.0 2.7755575615628914e-17 0.0 5.551115123125783e-17">
+								<joint name="FingerTipAssembly_bc7e70d7_joint" pos="-6.5371804131346096e-18 -1.5935858178068978e-17 1.6822041242320552e-16" axis="0.0 -0.9999999999999998 -5.551115123125783e-17" range="-0.3490658503988659 2.2689280275926285"/>
+								<geom mesh="FingerTipAssembly"/>
+							</body>
+							<joint name="M-PP-Assembly_c004e538_joint" pos="-6.247486316026924e-19 2.7821222532288604e-17 -5.000422469950927e-17" axis="0.0 -0.9999999999999998 -5.551115123125783e-17" range="-0.3490658503988659 1.9198621771937625"/>
+							<geom mesh="M-PP-Assembly"/>
+						</body>
+						<joint name="AP-Assembly_a3d92f10_joint" pos="0.020000000000000052 -4.640385298237959e-17 5.421010862427522e-18" axis="2.0816681711721685e-16 -1.1102230246251565e-16 -0.9999999999999998" range="-0.5235987755982988 0.5235987755982988"/>
+						<geom mesh="AP-Assembly"/>
+					</body>
+					<joint name="CarpalsAssembly_a3f178b9_joint" pos="0.002000000000000012 -0.0014412498723578018 -0.03871931353519552" axis="-1.0000000000000009 -1.4791141972893971e-31 -1.0947644252537633e-46" range="-1.0471975511965976 1.0471975511965976"/>
+					<geom mesh="CarpalsAssembly"/>
+				</body>
+				<geom mesh="TowerAssembly"/>
+			</body>
+		</body>
+	</worldbody>
+	<actuator>
+		<position name="CarpalsAssembly_a3f178b9_joint_actuator" joint="CarpalsAssembly_a3f178b9_joint" ctrlrange="-1.0471975511965976 1.0471975511965976"/>
+		<position name="AP-Assembly_a3d92f10_joint_actuator" joint="AP-Assembly_a3d92f10_joint" ctrlrange="-0.5235987755982988 0.5235987755982988"/>
+		<position name="M-PP-Assembly_c004e538_joint_actuator" joint="M-PP-Assembly_c004e538_joint" ctrlrange="-0.3490658503988659 1.9198621771937625"/>
+		<position name="FingerTipAssembly_bc7e70d7_joint_actuator" joint="FingerTipAssembly_bc7e70d7_joint" ctrlrange="-0.3490658503988659 2.2689280275926285"/>
+		<position name="AP-Assembly_0c2e1cd6_joint_actuator" joint="AP-Assembly_0c2e1cd6_joint" ctrlrange="-0.5235987755982988 0.5235987755982988"/>
+		<position name="M-PP-Assembly_8bc6ddb7_joint_actuator" joint="M-PP-Assembly_8bc6ddb7_joint" ctrlrange="-0.3490658503988659 1.9198621771937625"/>
+		<position name="FingerTipAssembly_a13adc36_joint_actuator" joint="FingerTipAssembly_a13adc36_joint" ctrlrange="-0.3490658503988659 2.2689280275926285"/>
+		<position name="AP-Assembly_8fe40f7e_joint_actuator" joint="AP-Assembly_8fe40f7e_joint" ctrlrange="-0.5235987755982988 0.5235987755982988"/>
+		<position name="P-PP-Assembly_c1041f9e_joint_actuator" joint="P-PP-Assembly_c1041f9e_joint" ctrlrange="-0.3490658503988659 1.9198621771937625"/>
+		<position name="FingerTipAssembly_28a83376_joint_actuator" joint="FingerTipAssembly_28a83376_joint" ctrlrange="-0.3490658503988659 2.2689280275926285"/>
+		<position name="AP-Assembly_22c0dde4_joint_actuator" joint="AP-Assembly_22c0dde4_joint" ctrlrange="-0.5235987755982988 0.5235987755982988"/>
+		<position name="I-PP-Assembly_32ddceb4_joint_actuator" joint="I-PP-Assembly_32ddceb4_joint" ctrlrange="-0.3490658503988659 1.9198621771937625"/>
+		<position name="FingerTipAssembly_cc9cd17e_joint_actuator" joint="FingerTipAssembly_cc9cd17e_joint" ctrlrange="-0.3490658503988659 2.2689280275926285"/>
+		<position name="T-TP-Assembly_8f310e51_joint_actuator" joint="T-TP-Assembly_8f310e51_joint" ctrlrange="-0.9250245035569946 0.8377580409572782"/>
+		<position name="T-AP-Assembly_b68d2db9_joint_actuator" joint="T-AP-Assembly_b68d2db9_joint" ctrlrange="-0.7853981633974483 0.7853981633974483"/>
+		<position name="P-PP-Assembly_4e31112a_joint_actuator" joint="P-PP-Assembly_4e31112a_joint" ctrlrange="-0.3490658503988659 2.007128639793479"/>
+		<position name="ThumbTipAssembly_da16f050_joint_actuator" joint="ThumbTipAssembly_da16f050_joint" ctrlrange="-0.3490658503988659 1.7453292519943295"/>
+	</actuator>
+	<contact>
+		<exclude body1="root" body2="TowerAssembly_8e26df17"/>
+		<exclude body1="TowerAssembly_8e26df17" body2="CarpalsAssembly_a3f178b9"/>
+		<exclude body1="CarpalsAssembly_a3f178b9" body2="AP-Assembly_a3d92f10"/>
+		<exclude body1="AP-Assembly_a3d92f10" body2="M-PP-Assembly_c004e538"/>
+		<exclude body1="M-PP-Assembly_c004e538" body2="FingerTipAssembly_bc7e70d7"/>
+		<exclude body1="CarpalsAssembly_a3f178b9" body2="AP-Assembly_0c2e1cd6"/>
+		<exclude body1="AP-Assembly_0c2e1cd6" body2="M-PP-Assembly_8bc6ddb7"/>
+		<exclude body1="M-PP-Assembly_8bc6ddb7" body2="FingerTipAssembly_a13adc36"/>
+		<exclude body1="CarpalsAssembly_a3f178b9" body2="AP-Assembly_8fe40f7e"/>
+		<exclude body1="AP-Assembly_8fe40f7e" body2="P-PP-Assembly_c1041f9e"/>
+		<exclude body1="P-PP-Assembly_c1041f9e" body2="FingerTipAssembly_28a83376"/>
+		<exclude body1="CarpalsAssembly_a3f178b9" body2="AP-Assembly_22c0dde4"/>
+		<exclude body1="AP-Assembly_22c0dde4" body2="I-PP-Assembly_32ddceb4"/>
+		<exclude body1="I-PP-Assembly_32ddceb4" body2="FingerTipAssembly_cc9cd17e"/>
+		<exclude body1="CarpalsAssembly_a3f178b9" body2="T-TP-Assembly_8f310e51"/>
+		<exclude body1="T-TP-Assembly_8f310e51" body2="T-AP-Assembly_b68d2db9"/>
+		<exclude body1="T-AP-Assembly_b68d2db9" body2="P-PP-Assembly_4e31112a"/>
+		<exclude body1="P-PP-Assembly_4e31112a" body2="ThumbTipAssembly_da16f050"/>
+	</contact>
+	<equality>
+	</equality>
+</mujoco>
