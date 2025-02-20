@@ -38,12 +38,12 @@ class ReliabilityNode(Node):
         gc_limits_lower = np.deg2rad(np.array(hand_scheme["gc_limits_lower"]))
         gc_limits_upper = np.deg2rad(np.array(hand_scheme["gc_limits_upper"])) * self.flexion_scalar
 
-        for index in [0, 1, 5, 8, 11, 14]:
+        for index in [0, 1, 2,  5, 8, 11, 14]:
             gc_limits_lower[index] = 0.0
             gc_limits_upper[index] = 0.0
 
-        gc_limits_lower[2] = np.deg2rad(20) #  rotate thumb to for better grasp (watch out - hard coded for old model)
-        gc_limits_upper[2] = np.deg2rad(20)
+        # gc_limits_lower[2] = np.deg2rad(20) #  rotate thumb to for better grasp (watch out - hard coded for old model)
+        # gc_limits_upper[2] = np.deg2rad(20)
 
         return gc_limits_lower, gc_limits_upper
 

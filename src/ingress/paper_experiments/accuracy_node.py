@@ -40,15 +40,15 @@ class AccuracyNode(Node):
         gc_limits_upper = np.deg2rad(np.array(hand_scheme["gc_limits_upper"])) * self.flexion_scalar
 
         for index in range(len(gc_limits_lower)):
-            if index not in [1, 6, 7]:
+            if index not in [6, 7]:
                 gc_limits_lower[index] = 0.0
                 gc_limits_upper[index] = 0.0
 
         # move the thumb away, such that markers on index can be seen better (watch out - hard coded for old model)
-        gc_limits_lower[1] = np.deg2rad(45) 
-        gc_limits_upper[1] = np.deg2rad(45)
-        gc_limits_lower[2] = np.deg2rad(40)
-        gc_limits_upper[2] = np.deg2rad(40)
+        # gc_limits_lower[1] = np.deg2rad(45) 
+        # gc_limits_upper[1] = np.deg2rad(45)
+        # gc_limits_lower[2] = np.deg2rad(40)
+        # gc_limits_upper[2] = np.deg2rad(40)
 
         return gc_limits_lower, gc_limits_upper
 
