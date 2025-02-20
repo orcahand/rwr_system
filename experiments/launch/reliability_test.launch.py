@@ -12,9 +12,9 @@ def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "orca2_hand",
+    "orca_v1",
     "urdf",
-    "orca2.urdf")
+    "orca_v1.urdf")
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
@@ -46,8 +46,8 @@ def generate_launch_description():
                     {"retarget/hand_scheme": os.path.join(
                         get_package_share_directory("viz"),
                         "models",
-                        "orca2_hand",
-                        "scheme_orca2.yaml",)
+                        "orca_v1",
+                        "scheme_orca_v1.yaml",)
                     },
                 ],
             ),
@@ -65,8 +65,8 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "orca2_hand",
-                            "scheme_orca2.yaml",
+                            "orca_v1",
+                            "scheme_orca_v1.yaml",
                         )
                     }
                 ],
@@ -86,7 +86,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca_v1.rviz')],
                 ),
         ]
     )

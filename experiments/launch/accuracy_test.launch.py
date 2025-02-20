@@ -21,9 +21,9 @@ def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "orca2_hand",
+    "orca_v1",
     "urdf",
-    "orca2.urdf")
+    "orca_v1.urdf")
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
@@ -59,13 +59,13 @@ def generate_launch_description():
                 parameters=[
                     {"motion_duration": 4.0},
                     {"recalibration_interval": 10.0},
-                    {"flexion_scalar": 0.8},
-                    {"signal_type": "step"},  # Use "step" if you want step signals, "sine" for sign waves
+                    {"flexion_scalar": 0.4},
+                    {"signal_type": "sine"},  # Use "step" if you want step signals, "sine" for sign waves
                     {"retarget/hand_scheme": os.path.join(
                         get_package_share_directory("viz"),
                         "models",
-                        "orca2_hand",
-                        "scheme_orca2.yaml",)
+                        "orca_v1",
+                        "scheme_orca_v1.yaml",)
                     },
                 ],
             ),
@@ -81,8 +81,8 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "orca2_hand",
-                            "scheme_orca2.yaml",
+                            "orca_v1",
+                            "scheme_orca_v1.yaml",
                         )
                     }
                 ],
@@ -102,7 +102,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca2.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca_v1.rviz')],
                 ),
 
             # Node to start recording OAK-D camera frames and commanded angles to a rosbag
