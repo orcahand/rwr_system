@@ -7,21 +7,21 @@
 		<mesh scale="0.001 0.001 0.001"/>
 	</default>
 	<asset>
-		<mesh name="AP-Assembly" file="mesh_orca/AP-Assembly.stl"/>
-		<mesh name="MiddleFinger" file="mesh_orca/MiddleFinger.stl"/>
-		<mesh name="T-AP-Assembly" file="mesh_orca/T-AP-Assembly.stl"/>
-		<mesh name="CarpalsAssembly" file="mesh_orca/CarpalsAssembly.stl"/>
-		<mesh name="FingerTipAssembly" file="mesh_orca/FingerTipAssembly.stl"/>
-		<mesh name="ThumbAssembly" file="mesh_orca/ThumbAssembly.stl"/>
-		<mesh name="I-PP-Assembly" file="mesh_orca/I-PP-Assembly.stl"/>
-		<mesh name="M-PP-Assembly" file="mesh_orca/M-PP-Assembly.stl"/>
-		<mesh name="TowerAssembly" file="mesh_orca/TowerAssembly.stl"/>
-		<mesh name="IndexFinger" file="mesh_orca/IndexFinger.stl"/>
-		<mesh name="PinkyFinger" file="mesh_orca/PinkyFinger.stl"/>
-		<mesh name="ThumbTipAssembly" file="mesh_orca/ThumbTipAssembly.stl"/>
-		<mesh name="T-TP-Assembly" file="mesh_orca/T-TP-Assembly.stl"/>
-		<mesh name="P-PP-Assembly" file="mesh_orca/P-PP-Assembly.stl"/>
-		<mesh name="RingFinger" file="mesh_orca/RingFinger.stl"/>
+		<mesh name="AP-Assembly" file="mesh/AP-Assembly.stl"/>
+		<mesh name="MiddleFinger" file="mesh/MiddleFinger.stl"/>
+		<mesh name="T-AP-Assembly" file="mesh/T-AP-Assembly.stl"/>
+		<mesh name="CarpalsAssembly" file="mesh/CarpalsAssembly.stl"/>
+		<mesh name="FingerTipAssembly" file="mesh/FingerTipAssembly.stl"/>
+		<mesh name="ThumbAssembly" file="mesh/ThumbAssembly.stl"/>
+		<mesh name="I-PP-Assembly" file="mesh/I-PP-Assembly.stl"/>
+		<mesh name="M-PP-Assembly" file="mesh/M-PP-Assembly.stl"/>
+		<mesh name="TowerAssembly" file="mesh/TowerAssembly.stl"/>
+		<mesh name="IndexFinger" file="mesh/IndexFinger.stl"/>
+		<mesh name="PinkyFinger" file="mesh/PinkyFinger.stl"/>
+		<mesh name="ThumbTipAssembly" file="mesh/ThumbTipAssembly.stl"/>
+		<mesh name="T-TP-Assembly" file="mesh/T-TP-Assembly.stl"/>
+		<mesh name="P-PP-Assembly" file="mesh/P-PP-Assembly.stl"/>
+		<mesh name="RingFinger" file="mesh/RingFinger.stl"/>
 	</asset>
 	<worldbody>
 		<body name="root" quat="1.0 0.0 0.0 0.0">

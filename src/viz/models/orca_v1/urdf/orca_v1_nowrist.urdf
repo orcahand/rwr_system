@@ -31,37 +31,6 @@
       <child link="root"/>
       <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
    </joint>
-   <link name="tower">
-      <inertial>
-         <origin xyz="0.04400415913446807 -0.00019600571598279832 0.016186968516348432" rpy="-0.04390970715787945 -0.010429109452127383 1.5584993556360334"/>
-         <mass value="2.9399146871191753"/>
-         <inertia ixx="0.004203087796313103" iyy="0.004033870993159062" izz="0.0021268483526808678" ixy="0" ixz="0" iyz="0"/>
-      </inertial>
-      <visual name="TowerAssembly">
-         <origin xyz="0.04400415913446807 -0.00019600571598279832 0.016186968516348432" rpy="-0.04390970715787934 -0.010429109452127161 1.5584993556360331"/>
-         <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_TowerAssembly.stl"/>
-         </geometry>
-         <material name="white"/>
-      </visual>
-   </link>
-   <link name="root2tower_fixed_jointbody">
-      <inertial>
-         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-         <mass value="0.001"/>
-         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
-      </inertial>
-   </link>
-   <joint type="fixed" name="root2tower_fixed">
-      <parent link="root"/>
-      <child link="root2tower_fixed_jointbody"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-   </joint>
-   <joint type="fixed" name="root2tower_fixed_offset">
-      <parent link="root2tower_fixed_jointbody"/>
-      <child link="tower"/>
-      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
-   </joint>
    <link name="palm">
       <inertial>
          <origin xyz="0.002881508885013908 -0.0012753763120547524 -0.00719047153594366" rpy="1.5601655784799395 0.04189793519330931 1.5819461028160493"/>
@@ -71,29 +40,27 @@
       <visual name="CarpalsAssembly">
          <origin xyz="0.002881508885013908 -0.0012753763120547524 -0.00719047153594366" rpy="1.5601655784799395 0.041897935193309754 1.5819461028160493"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_CarpalsAssembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_CarpalsAssembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
    </link>
-   <link name="tower2root_jointbody">
+   <link name="root2palm_fixed_jointbody">
       <inertial>
          <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
          <mass value="0.001"/>
          <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
       </inertial>
    </link>
-   <joint type="revolute" name="tower2root">
-      <parent link="tower"/>
-      <child link="tower2root_jointbody"/>
-      <origin xyz="0.04062890845062731 3.686287386450715e-18 0.10237107458169505" rpy="-6.123233995736781e-17 -4.440892098500626e-16 1.942890293094021e-16"/>
-      <axis xyz="-1.0000000000000009 -1.4791141972893971e-31 -1.0947644252537633e-46"/>
-      <limit lower="-1.0471975511965976" upper="1.0471975511965976" effort="100" velocity="100"/>
+   <joint type="fixed" name="root2palm_fixed">
+      <parent link="root"/>
+      <child link="root2palm_fixed_jointbody"/>
+      <origin xyz="0.03862890845062728 0.0014412498723578074 0.14109038811689056" rpy="-6.123233995736781e-17 -4.440892098500626e-16 1.942890293094021e-16"/>
    </joint>
-   <joint type="fixed" name="tower2root_offset">
-      <parent link="tower2root_jointbody"/>
+   <joint type="fixed" name="root2palm_fixed_offset">
+      <parent link="root2palm_fixed_jointbody"/>
       <child link="palm"/>
-      <origin xyz="-0.002000000000000012 0.0014412498723578018 0.03871931353519552" rpy="0.0 0.0 0.0"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
    </joint>
    <link name="thumb_base">
       <inertial>
@@ -104,7 +71,7 @@
       <visual name="T-TP-Assembly">
          <origin xyz="0.010529379149451916 -1.0212576814423867e-05 8.495774869309947e-06" rpy="1.5763420570772302 0.005687598820466988 1.5702436138290758"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_T-TP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_T-TP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -137,7 +104,7 @@
       <visual name="T-AP-Assembly">
          <origin xyz="0.01701004352669714 4.7003303999020595e-05 -8.686628129100978e-05" rpy="1.6265414639314582 -1.4723264578922137 1.5252609362500333"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_T-AP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_T-AP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -170,7 +137,7 @@
       <visual name="P-PP-Assembly">
          <origin xyz="0.0014151363770926754 5.956925618599269e-06 0.013627702691985757" rpy="-0.0012564590227194135 0.024765536359687035 0.0006197733490160217"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_P-PP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_P-PP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -203,7 +170,7 @@
       <visual name="ThumbTipAssembly">
          <origin xyz="0.0019263407363933048 1.4557758490367377e-05 0.013252605089620229" rpy="0.0005042469448421566 -0.01731928165759511 -0.007693848109361373"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_ThumbTipAssembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_ThumbTipAssembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -260,7 +227,7 @@
       <visual name="AP-Assembly">
          <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_AP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_AP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -293,7 +260,7 @@
       <visual name="I-PP-Assembly">
          <origin xyz="0.0014143363519175582 4.156494435167203e-06 0.01613338680226874" rpy="-0.001102572366200157 0.015527459248408038 0.0006067795128342916"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_I-PP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_I-PP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -326,7 +293,7 @@
       <visual name="FingerTipAssembly">
          <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_FingerTipAssembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_FingerTipAssembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -383,7 +350,7 @@
       <visual name="AP-Assembly">
          <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_AP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_AP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -416,7 +383,7 @@
       <visual name="P-PP-Assembly">
          <origin xyz="0.0014151363770926754 5.956925618599269e-06 0.013627702691985757" rpy="-0.0012564590227194135 0.024765536359687035 0.0006197733490160217"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_P-PP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_P-PP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -449,7 +416,7 @@
       <visual name="FingerTipAssembly">
          <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_FingerTipAssembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_FingerTipAssembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -506,7 +473,7 @@
       <visual name="AP-Assembly">
          <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_AP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_AP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -539,7 +506,7 @@
       <visual name="M-PP-Assembly">
          <origin xyz="0.0015215641155183913 3.409155126104343e-06 0.019988197676665105" rpy="-0.000867570076115562 0.013815007172908844 0.0018493767195661807"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_M-PP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_M-PP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -572,7 +539,7 @@
       <visual name="FingerTipAssembly">
          <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_FingerTipAssembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_FingerTipAssembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -629,7 +596,7 @@
       <visual name="AP-Assembly">
          <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_AP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_AP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -662,7 +629,7 @@
       <visual name="M-PP-Assembly">
          <origin xyz="0.0015215641155183913 3.409155126104343e-06 0.019988197676665105" rpy="-0.000867570076115562 0.013815007172908844 0.0018493767195661807"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_M-PP-Assembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_M-PP-Assembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -695,7 +662,7 @@
       <visual name="FingerTipAssembly">
          <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
          <geometry>
-            <mesh filename="package://viz/models/orca_test/urdf/converted_FingerTipAssembly.stl"/>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_FingerTipAssembly.stl"/>
          </geometry>
          <material name="white"/>
       </visual>

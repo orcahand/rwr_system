@@ -21,9 +21,9 @@ def generate_launch_description():
     urdf = os.path.join(
     get_package_share_directory('viz'),
     "models",
-    "orca_test",
+    "orca_v1",
     "urdf",
-    "orca_test.urdf")
+    "orca_v1.urdf")
 
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
@@ -64,8 +64,8 @@ def generate_launch_description():
                     {"retarget/hand_scheme": os.path.join(
                         get_package_share_directory("viz"),
                         "models",
-                        "orca_test",
-                        "scheme_orca_test.yaml",)
+                        "orca_v1",
+                        "scheme_orca_v1.yaml",)
                     },
                 ],
             ),
@@ -81,8 +81,8 @@ def generate_launch_description():
                         "scheme_path": os.path.join(
                             get_package_share_directory("viz"),
                             "models",
-                            "orca_test",
-                            "scheme_orca_test.yaml",
+                            "orca_v1",
+                            "scheme_orca_v1.yaml",
                         )
                     }
                 ],
@@ -102,7 +102,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 output='screen', 
-                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca_test.rviz')],
+                arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca_v1.rviz')],
                 ),
 
             # Node to start recording OAK-D camera frames and commanded angles to a rosbag
