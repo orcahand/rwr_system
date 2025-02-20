@@ -143,13 +143,15 @@ class CalibrationClass():
             motors_directions[thumb_motor_idxs[0]] = -1 
             motors_directions[thumb_motor_idxs[1]] = -1 
 
-            current_path = os.path.abspath(__file__)
-            current_path = os.path.dirname(current_path)
-            file_path = os.path.join(current_path,"calibration_yaml", "calibration_ratios.yaml")
+            # current_path = os.path.abspath(__file__)
+            # current_path = os.path.dirname(current_path)
+            # file_path = os.path.join(current_path,"calibration_yaml", "calibration_ratios.yaml")
 
             # Create a new calibration file
             date_created = datetime.now().strftime("%Y-%m-%d_%H-%M")
-            file_path = os.path.join("src/hand_control/calibration_yaml","calibration_"+ date_created+".yaml")        
+            current_path = os.path.abspath(__file__)
+            current_path = os.path.dirname(current_path)
+            file_path = os.path.join(current_path, "calibration_"+ date_created+".yaml")        
                 
             self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
             
@@ -390,38 +392,6 @@ class CalibrationClass():
         time.sleep(0.2)
         return wrist_pos_extended
 
-
-    # def create_yaml_for_calibration(self, finger_names, file_path):
-        # # Ensure the folder exists
-        # directory = os.path.dirname(file_path)
-        # if directory and not os.path.exists(directory):
-        #     os.makedirs(directory)
-
-        # # Define the common structure for each joint
-        # joints = ["ABD", "MCP", "PIP"]
-
-        # # Initialize the calibration_defs dictionary
-        # calibration_defs = {}
-
-        # # Build the structure using nested for loops
-        # for finger in finger_names:
-        #     calibration_defs[finger] = {}
-            
-        #     joints_to_use = joints
-        #     if finger == "thumb":
-        #         joints_to_use = joints + ["DIP"]  # Thumb has an additional joint
-        #     elif finger == "wrist":
-        #         joints_to_use = ["PITCH"]  # Wrist has only one joint
-
-        #     for joint in joints_to_use:
-        #         calibration_defs[finger][joint] = {
-        #             "value": [0, 0],
-        #             "ratio": 0
-        #         }
-
-        # # Write the structure to a YAML file
-        # with open(file_path, "w") as yaml_file:
-        #     yaml.dump(calibration_defs, yaml_file, default_flow_style=False)
 
     def create_yaml_for_calibration(self, finger_names, file_path):
         directory = os.path.dirname(file_path)
