@@ -37,6 +37,7 @@ install(PROGRAMS
 
 install(PROGRAMS
     paper_experiments/reliability_node.py
+    paper_experiments/hand_data_logger_node.py
     paper_experiments/accuracy_node.py
     paper_experiments/oakd_frame_publisher.py
   DESTINATION lib/${PROJECT_NAME}

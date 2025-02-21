@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 import numpy as np
-from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout
+from std_msgs.msg import Float32MultiArray, Bool
 import os
 from faive_system.src.hand_control.hand_controller import HandController
 
@@ -17,18 +17,26 @@ class HandControllerNode(Node):
 
         port = self.get_parameter("hand_controller/port").value
         baudrate = self.get_parameter("hand_controller/baudrate").value
-        # auto_calibrate = self.get_parameter("hand_controller/auto_calibrate").value
-
-        # self._hc = HandController(port=port, baudrate=baudrate)
 
         self._hc = HandController(port=port, calibration=False, auto_calibrate= False)
-        # self.get_logger().info("Hand Controller Before INIT =========================")
-
         self._hc.init_joints(calibrate=False)
+
+        # Flag to indicate if calibration is happening
+        self.calibration_in_progress = False
+
+        # Subscribers
+        self.joint_angle_sub = self.create_subscription(Float32MultiArray, "/hand/policy_output", self.joint_angle_cb, 10)
+        self.auto_calib_sub = self.create_subscription(Bool, "/hand/flag_auto_calib", self.auto_calib_callback, 10)
         
-        self.joint_angle_sub = self.create_subscription(
-            Float32MultiArray, "/hand/policy_output", self.joint_angle_cb, 10
-        )
+        # Publishers
+        self.curr_pub = self.create_publisher(Float32MultiArray, "/hand/current", 10)
+        self.temp_pub = self.create_publisher(Float32MultiArray, "/hand/temperature", 10)
+        self.pos_desired_pub = self.create_publisher(Float32MultiArray, "/hand/pos_des", 10)
+        self.pos_read_pub = self.create_publisher(Float32MultiArray, "/hand/pos_read", 10)
+
+        # Timer: run at 20 Hz => every 0.05 s
+        self.monitor_timer = self.create_timer(0.05, self.monitor_callback)
+
 
     def joint_angle_cb(self, msg):
         assert len(msg.data) == 17, "Expected 17 joint angles, got {}".format(
@@ -36,10 +44,43 @@ class HandControllerNode(Node):
         )
         joint_angles = np.array(msg.data)
         joint_angles_deg = joint_angles * 180 / np.pi
-        # self._hc.command_joint_angles(joint_angles_deg)
+        motor_pos_des = self._hc.write_desired_joint_angles(joint_angles_deg)
 
-        # print(f"Node thumb angles: {joint_angles[1:5]}")
-        self._hc.write_desired_joint_angles(joint_angles_deg)
+        motor_pos_des_msg = Float32MultiArray()
+        motor_pos_des_msg.data = motor_pos_des.tolist()
+        self.pos_desired_pub.publish(motor_pos_des_msg)
+
+    def auto_calib_callback(self, msg):
+        """Triggered when reliability_node publishes that auto-calibration is needed."""
+        if msg.data and not self.calibration_in_progress:
+            self.get_logger().info("Received auto-calibration request. Starting calibration.")
+            self.calibration_in_progress = True
+
+            self._hc.auto_calibrate_fingers_with_pos()
+
+            self.get_logger().info("Auto-calibration completed.")
+            self.calibration_in_progress = False
+
+    def monitor_callback(self):
+            """Runs at 20Hz to publish each motor’s current & temperature."""
+            # Get current in mA
+            motor_currents = self._hc.get_motor_cur()  # shape: (num_motors,)
+
+            # Get temperature in °C as uint8
+            motor_temps = self._hc.get_motor_temp()  # shape: (num_motors,)
+
+            motor_pos = self._hc.get_motor_pos()  # shape: (num_motors,)
+
+
+            # Convert data for publishing
+            curr_msg = Float32MultiArray(data=motor_currents.tolist())
+            temp_msg = Float32MultiArray(data=motor_temps.tolist())
+            pos_msg = Float32MultiArray(data=motor_pos.tolist())
+
+            self.curr_pub.publish(curr_msg)
+            self.temp_pub.publish(temp_msg)
+            self.pos_read_pub.publish(pos_msg)
+
 
 
 def main(args=None):

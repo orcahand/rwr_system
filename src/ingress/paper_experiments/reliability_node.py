@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Bool
 import numpy as np
 import yaml
 import math
@@ -12,13 +12,14 @@ class ReliabilityNode(Node):
         super().__init__("reliability_node")
         self.publisher_ = self.create_publisher(Float32MultiArray, "/hand/policy_output", 10)
         
+        self.auto_calib_pub = self.create_publisher(Bool, "/hand/flag_auto_calib", 10)
+
         self.motion_duration = self.declare_parameter("motion_duration", 10.0).value
         self.recalibration_interval = self.declare_parameter("recalibration_interval", 60.0).value
         self.flexion_scalar = self.declare_parameter("flexion_scalar", 1.0).value
         
         self.start_time = time.time()
         self.last_recalibration_time = self.start_time
-        self.calibration_in_progress = False
 
         hand_scheme_path = self.declare_parameter("retarget/hand_scheme", "").value
         self.hand_scheme = self.load_hand_scheme(hand_scheme_path)
@@ -58,11 +59,11 @@ class ReliabilityNode(Node):
         if elapsed_time_since_recalibration >= self.recalibration_interval and np.allclose(self.joint_values, self.gc_limits_lower, atol=0.1):
             self.timer.cancel() # Cancel the timer
 
-            # TODO ##############################################################
             self.get_logger().info("Stopping movement for initialization and auto-calibration")
-            time.sleep(4)
+            msg_bool = Bool()
+            msg_bool.data = True
+            self.auto_calib_pub.publish(msg_bool)
             self.get_logger().info("Initialization and auto-calibration complete")
-            # TODO ##############################################################
 
             self.last_recalibration_time = time.time()  # Reset the recalibration time
             self.start_time = time.time() - current_time # Reset the start time to continue smoothly

@@ -21,16 +21,13 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-          
-
-
-            # # HAND CONTROLLER NODE
-            # Node(
-            #     package="hand_control",
-            #     executable="hand_control_node.py",
-            #     name="hand_control_node",
-            #     output="screen"
-            # ),
+            # HAND CONTROLLER NODE
+            Node(
+                package="hand_control",
+                executable="hand_control_node.py",
+                name="hand_control_node",
+                output="screen"
+            ),
 
               
             # RELIABILITY TEST NODE
@@ -41,8 +38,8 @@ def generate_launch_description():
                 output="log",
                 parameters=[
                     {"motion_duration": 4.0},
-                    {"recalibration_interval": 10.0},
-                    {"flexion_scalar": 0.5},
+                    {"recalibration_interval": 100.0},
+                    {"flexion_scalar": 0.7},
                     {"retarget/hand_scheme": os.path.join(
                         get_package_share_directory("viz"),
                         "models",
@@ -53,6 +50,13 @@ def generate_launch_description():
             ),
             
            
+            # HAND DATA LOGGER NODE
+            Node(
+                package="ingress",
+                executable="hand_data_logger_node.py",
+                name="hand_data_logger",
+                output="screen"
+            ),
             
             # VISUALIZATION NODE
             
