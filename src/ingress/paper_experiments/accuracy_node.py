@@ -15,7 +15,8 @@ class AccuracyNode(Node):
         self.motion_duration = self.declare_parameter("motion_duration", 10.0).value
         self.recalibration_interval = self.declare_parameter("recalibration_interval", 60.0).value
         self.flexion_scalar = self.declare_parameter("flexion_scalar", 1.0).value
-  
+        self.signal_type = self.declare_parameter("signal_type", "sine").value  # New parameter for signal type
+
         self.start_time = time.time()
         self.last_recalibration_time = self.start_time
         self.calibration_in_progress = False
@@ -39,15 +40,15 @@ class AccuracyNode(Node):
         gc_limits_upper = np.deg2rad(np.array(hand_scheme["gc_limits_upper"])) * self.flexion_scalar
 
         for index in range(len(gc_limits_lower)):
-            if index not in [1, 6, 7]:
+            if index not in [6, 7]:
                 gc_limits_lower[index] = 0.0
                 gc_limits_upper[index] = 0.0
 
         # move the thumb away, such that markers on index can be seen better (watch out - hard coded for old model)
-        gc_limits_lower[1] = np.deg2rad(45) 
-        gc_limits_upper[1] = np.deg2rad(45)
-        gc_limits_lower[2] = np.deg2rad(40)
-        gc_limits_upper[2] = np.deg2rad(40)
+        # gc_limits_lower[1] = np.deg2rad(45) 
+        # gc_limits_upper[1] = np.deg2rad(45)
+        # gc_limits_lower[2] = np.deg2rad(40)
+        # gc_limits_upper[2] = np.deg2rad(40)
 
         return gc_limits_lower, gc_limits_upper
 
@@ -56,8 +57,12 @@ class AccuracyNode(Node):
         current_time = time.time() - self.start_time
         elapsed_time_since_recalibration = time.time() - self.last_recalibration_time
 
-        sine_wave = (-math.cos(current_time * (2 * math.pi / self.motion_duration)) + 1) / 2
-        self.joint_values = (1 - sine_wave) * self.gc_limits_lower + sine_wave * self.gc_limits_upper
+        if self.signal_type == "sine":
+            sine_wave = (-math.cos(current_time * (2 * math.pi / self.motion_duration)) + 1) / 2
+            self.joint_values = (1 - sine_wave) * self.gc_limits_lower + sine_wave * self.gc_limits_upper
+        elif self.signal_type == "step":
+            step_wave = 1 if (current_time % self.motion_duration) < (self.motion_duration / 2) else 0
+            self.joint_values = (1 - step_wave) * self.gc_limits_lower + step_wave * self.gc_limits_upper
 
         if elapsed_time_since_recalibration >= self.recalibration_interval and np.allclose(self.joint_values, self.gc_limits_lower, atol=0.1):
             self.timer.cancel() # Cancel the timer

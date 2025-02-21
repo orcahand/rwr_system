@@ -203,9 +203,9 @@ def rotate_points_around_y(joints, angle_degrees):
     # Define the rotation matrix around the z-axis
     
     rotation_matrix = np.array([
-        [np.cos(angle_radians), -np.sin(angle_radians), 0],
-        [np.sin(angle_radians), np.cos(angle_radians), 0],
-        [0, 0, 1]
+        [1, 0, 0],
+        [0, np.cos(angle_radians), -np.sin(angle_radians)],
+        [0, np.sin(angle_radians), np.cos(angle_radians)]
     ])
     
     # Translate points to the origin
@@ -233,7 +233,7 @@ def get_wrist_angle(joint_pos):
     angle = np.arctan2(arm[1], np.linalg.norm(arm_xz))
 
     # Convert the angle to degrees
-    angle_degrees = np.degrees(angle)
+    angle_degrees = -np.degrees(angle)
     
     return angle_degrees
 

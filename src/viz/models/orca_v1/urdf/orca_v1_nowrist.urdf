@@ -1,0 +1,716 @@
+<?xml version="1.0" ?>
+<robot name="converted_robot">
+   <link name="world">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <link name="root">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <link name="world2root_fixed_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="world2root_fixed">
+      <parent link="world"/>
+      <child link="world2root_fixed_jointbody"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <joint type="fixed" name="world2root_fixed_offset">
+      <parent link="world2root_fixed_jointbody"/>
+      <child link="root"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="palm">
+      <inertial>
+         <origin xyz="0.002881508885013908 -0.0012753763120547524 -0.00719047153594366" rpy="1.5601655784799395 0.04189793519330931 1.5819461028160493"/>
+         <mass value="0.2126860092978223"/>
+         <inertia ixx="0.00012178343495389645" iyy="8.316880938872915e-05" izz="5.69755490120493e-05" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="CarpalsAssembly">
+         <origin xyz="0.002881508885013908 -0.0012753763120547524 -0.00719047153594366" rpy="1.5601655784799395 0.041897935193309754 1.5819461028160493"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_CarpalsAssembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="root2palm_fixed_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="root2palm_fixed">
+      <parent link="root"/>
+      <child link="root2palm_fixed_jointbody"/>
+      <origin xyz="0.03862890845062728 0.0014412498723578074 0.14109038811689056" rpy="-6.123233995736781e-17 -4.440892098500626e-16 1.942890293094021e-16"/>
+   </joint>
+   <joint type="fixed" name="root2palm_fixed_offset">
+      <parent link="root2palm_fixed_jointbody"/>
+      <child link="palm"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="thumb_base">
+      <inertial>
+         <origin xyz="0.010529379149451916 -1.0212576814423867e-05 8.495774869309947e-06" rpy="1.57634205707723 0.005687598820466988 1.5702436138290756"/>
+         <mass value="0.0074875144010899545"/>
+         <inertia ixx="4.915455361035425e-07" iyy="4.2329004702934465e-07" izz="4.1073011191217545e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="T-TP-Assembly">
+         <origin xyz="0.010529379149451916 -1.0212576814423867e-05 8.495774869309947e-06" rpy="1.5763420570772302 0.005687598820466988 1.5702436138290758"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_T-TP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="root2thumb_base_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="root2thumb_base">
+      <parent link="palm"/>
+      <child link="root2thumb_base_jointbody"/>
+      <origin xyz="-0.026596228805379245 0.012467608905357173 -0.013731317517900202" rpy="-2.623243999248972 0.36429799059196055 -1.2778314442697774"/>
+      <axis xyz="-2.920774733183862e-12 3.3306690738754696e-16 1.0000000000000002"/>
+      <limit lower="-0.9250245035569946" upper="0.8377580409572782" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="root2thumb_base_offset">
+      <parent link="root2thumb_base_jointbody"/>
+      <child link="thumb_base"/>
+      <origin xyz="-0.016999999999975042 -6.852157730108388e-17 -2.7301511745791984e-14" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="thumb_pp">
+      <inertial>
+         <origin xyz="0.01701004352669714 4.7003303999020595e-05 -8.686628129100978e-05" rpy="1.626541463931455 -1.4723264578922137 1.5252609362500364"/>
+         <mass value="0.01402737042708516"/>
+         <inertia ixx="1.3800850209807166e-06" iyy="1.1809029407566535e-06" izz="6.941321836664285e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="T-AP-Assembly">
+         <origin xyz="0.01701004352669714 4.7003303999020595e-05 -8.686628129100978e-05" rpy="1.6265414639314582 -1.4723264578922137 1.5252609362500333"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_T-AP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="thumb_base2pp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="thumb_base2pp">
+      <parent link="thumb_base"/>
+      <child link="thumb_base2pp_jointbody"/>
+      <origin xyz="-2.0816681711721685e-17 -0.006690243410563722 -0.00030669391648898483" rpy="1.9198621771937625 2.220446049250313e-16 -1.1102230246251565e-16"/>
+      <axis xyz="-1.1102230246251565e-16 0.34202014332566866 0.9396926207859075"/>
+      <limit lower="-0.7853981633974483" upper="0.7853981633974483" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="thumb_base2pp_offset">
+      <parent link="thumb_base2pp_jointbody"/>
+      <child link="thumb_pp"/>
+      <origin xyz="-0.03 -0.002 -0.0063916678614429154" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="thumb_mp">
+      <inertial>
+         <origin xyz="0.0014151363770926754 5.956925618599269e-06 0.013627702691985757" rpy="-0.0012564590227194135 0.024765536359687035 0.0006197733490160217"/>
+         <mass value="0.015497848277221124"/>
+         <inertia ixx="1.846626969865921e-06" iyy="1.771855178330145e-06" izz="6.563672279788464e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="P-PP-Assembly">
+         <origin xyz="0.0014151363770926754 5.956925618599269e-06 0.013627702691985757" rpy="-0.0012564590227194135 0.024765536359687035 0.0006197733490160217"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_P-PP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="thumb_pp2mp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="thumb_pp2mp">
+      <parent link="thumb_pp"/>
+      <child link="thumb_pp2mp_jointbody"/>
+      <origin xyz="4.708523807784693e-17 1.513645907263937e-16 -4.2834101494079344e-17" rpy="-3.1415926535897927 1.5707963267948948 0.0"/>
+      <axis xyz="-1.27675647831893e-15 -0.9999999999999994 4.996003610813204e-16"/>
+      <limit lower="-0.3490658503988659" upper="2.007128639793479" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="thumb_pp2mp_offset">
+      <parent link="thumb_pp2mp_jointbody"/>
+      <child link="thumb_mp"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="thumb_dp">
+      <inertial>
+         <origin xyz="0.0019263407363933048 1.4557758490367377e-05 0.013252605089620229" rpy="0.0005042469448421566 -0.01731928165759511 -0.007693848109361373"/>
+         <mass value="0.01818889883021656"/>
+         <inertia ixx="1.7342479877374563e-06" iyy="1.6928601517092007e-06" izz="6.72000990269703e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="ThumbTipAssembly">
+         <origin xyz="0.0019263407363933048 1.4557758490367377e-05 0.013252605089620229" rpy="0.0005042469448421566 -0.01731928165759511 -0.007693848109361373"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_ThumbTipAssembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="thumb_mp2dp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="thumb_mp2dp">
+      <parent link="thumb_mp"/>
+      <child link="thumb_mp2dp_jointbody"/>
+      <origin xyz="0.0004999999999845258 1.960237527853792e-16 0.03299999999999989" rpy="-4.440892098500625e-16 -4.440892098500626e-16 -1.110223024625157e-15"/>
+      <axis xyz="-1.3877787807814457e-16 -1.0000000000000018 1.6653345369377348e-16"/>
+      <limit lower="-0.3490658503988659" upper="1.7453292519943295" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="thumb_mp2dp_offset">
+      <parent link="thumb_mp2dp_jointbody"/>
+      <child link="thumb_dp"/>
+      <origin xyz="0.0 0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="thumb_fingertip">
+      <inertial>
+         <origin xyz="0.0 0.0 0.03" rpy="0.0 0.0 0.0"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <link name="thumb_dp2thumb_fingertip_fixed_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="thumb_dp2thumb_fingertip_fixed">
+      <parent link="thumb_dp"/>
+      <child link="thumb_dp2thumb_fingertip_fixed_jointbody"/>
+      <origin xyz="0.0 0.0 0.03" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <joint type="fixed" name="thumb_dp2thumb_fingertip_fixed_offset">
+      <parent link="thumb_dp2thumb_fingertip_fixed_jointbody"/>
+      <child link="thumb_fingertip"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="index_um">
+      <inertial>
+         <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
+         <mass value="0.006625913032045117"/>
+         <inertia ixx="4.786348664569036e-07" iyy="4.4192916777269033e-07" izz="2.7095034582421024e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="AP-Assembly">
+         <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_AP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="index_abd_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="index_abd">
+      <parent link="palm"/>
+      <child link="index_abd_jointbody"/>
+      <origin xyz="-0.02409178493002779 0.0019042822195537534 0.025160679302658893" rpy="1.608102038715379 1.1529632074851635 -0.051848338904223135"/>
+      <axis xyz="4.163336342344337e-17 9.992007221626409e-16 -1.0000000000000013"/>
+      <limit lower="-0.5235987755982988" upper="0.5235987755982988" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="index_abd_offset">
+      <parent link="index_abd_jointbody"/>
+      <child link="index_um"/>
+      <origin xyz="-0.020000000000000052 2.3852447794681098e-18 -4.336808689942018e-19" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="index_pp">
+      <inertial>
+         <origin xyz="0.0014143363519175582 4.156494435167203e-06 0.01613338680226874" rpy="-0.001102572366200157 0.015527459248408038 0.0006067795128342916"/>
+         <mass value="0.018700586463984262"/>
+         <inertia ixx="2.662336289616557e-06" iyy="2.5653412309208117e-06" izz="8.02677011751458e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="I-PP-Assembly">
+         <origin xyz="0.0014143363519175582 4.156494435167203e-06 0.01613338680226874" rpy="-0.001102572366200157 0.015527459248408038 0.0006067795128342916"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_I-PP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="root2index_pp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="root2index_pp">
+      <parent link="index_um"/>
+      <child link="root2index_pp_jointbody"/>
+      <origin xyz="-2.5541056475587942e-17 1.0557908552474885e-17 -8.628646044820514e-18" rpy="-7.850462293418875e-17 -1.5707963267948963 0.0"/>
+      <axis xyz="-1.1102230246251565e-15 -0.9999999999999998 -8.326672684688674e-17"/>
+      <limit lower="-0.3490658503988659" upper="1.9198621771937625" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="root2index_pp_offset">
+      <parent link="root2index_pp_jointbody"/>
+      <child link="index_pp"/>
+      <origin xyz="8.62864604482052e-18 -1.0557908552474884e-17 -2.5541056475587933e-17" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="index_mp">
+      <inertial>
+         <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
+         <mass value="0.018229214728618118"/>
+         <inertia ixx="2.7483316705449915e-06" iyy="2.7260398150926247e-06" izz="5.982307965118894e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="FingerTipAssembly">
+         <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_FingerTipAssembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="index_pp2mp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="index_pp2mp">
+      <parent link="index_pp"/>
+      <child link="index_pp2mp_jointbody"/>
+      <origin xyz="0.0004999999999839601 6.589248156966668e-17 0.038" rpy="0.0 0.0 1.1102230246251565e-16"/>
+      <axis xyz="-1.1102230246251565e-15 -0.9999999999999998 -8.326672684688674e-17"/>
+      <limit lower="-0.3490658503988659" upper="2.2689280275926285" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="index_pp2mp_offset">
+      <parent link="index_pp2mp_jointbody"/>
+      <child link="index_mp"/>
+      <origin xyz="4.506562989359519e-18 -5.895358766575946e-17 -6.487401240321147e-17" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="index_fingertip">
+      <inertial>
+         <origin xyz="-0.009 0.0 0.04" rpy="0.0 0.0 0.0"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <link name="index_mp2index_fingertip_fixed_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="index_mp2index_fingertip_fixed">
+      <parent link="index_mp"/>
+      <child link="index_mp2index_fingertip_fixed_jointbody"/>
+      <origin xyz="-0.009 0.0 0.04" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <joint type="fixed" name="index_mp2index_fingertip_fixed_offset">
+      <parent link="index_mp2index_fingertip_fixed_jointbody"/>
+      <child link="index_fingertip"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="pinky_um">
+      <inertial>
+         <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
+         <mass value="0.006625913032045117"/>
+         <inertia ixx="4.786348664569036e-07" iyy="4.4192916777269033e-07" izz="2.7095034582421024e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="AP-Assembly">
+         <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_AP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="pinky_abd_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="pinky_abd">
+      <parent link="palm"/>
+      <child link="pinky_abd_jointbody"/>
+      <origin xyz="0.04258768282792981 0.004991925321003577 0.007247738795820427" rpy="-1.4969430651841689 0.8614853700810636 -2.883730096597108"/>
+      <axis xyz="1.942890293094024e-16 -5.551115123125783e-16 -0.9999999999999997"/>
+      <limit lower="-0.5235987755982988" upper="0.5235987755982988" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="pinky_abd_offset">
+      <parent link="pinky_abd_jointbody"/>
+      <child link="pinky_um"/>
+      <origin xyz="-0.020000000000000014 -2.42861286636753e-17 -6.071532165918825e-18" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="pinky_pp">
+      <inertial>
+         <origin xyz="0.0014151363770926754 5.956925618599269e-06 0.013627702691985757" rpy="-0.0012564590227194135 0.024765536359687035 0.0006197733490160217"/>
+         <mass value="0.015497848277221124"/>
+         <inertia ixx="1.846626969865921e-06" iyy="1.771855178330145e-06" izz="6.563672279788464e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="P-PP-Assembly">
+         <origin xyz="0.0014151363770926754 5.956925618599269e-06 0.013627702691985757" rpy="-0.0012564590227194135 0.024765536359687035 0.0006197733490160217"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_P-PP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="root2pinky_pp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="root2pinky_pp">
+      <parent link="pinky_um"/>
+      <child link="root2pinky_pp_jointbody"/>
+      <origin xyz="-9.80194474041885e-17 2.8970456895533516e-17 -1.0346526674750982e-18" rpy="7.850462293418872e-17 -1.5707963267948961 0.0"/>
+      <axis xyz="-1.6653345369377348e-16 -1.0000000000000004 -2.220446049250313e-16"/>
+      <limit lower="-0.3490658503988659" upper="1.9198621771937625" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="root2pinky_pp_offset">
+      <parent link="root2pinky_pp_jointbody"/>
+      <child link="pinky_pp"/>
+      <origin xyz="-3.4409772224679328e-18 -3.9175276362032155e-17 -1.0647123163719203e-16" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="pinky_mp">
+      <inertial>
+         <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
+         <mass value="0.018229214728618118"/>
+         <inertia ixx="2.7483316705449915e-06" iyy="2.7260398150926247e-06" izz="5.982307965118894e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="FingerTipAssembly">
+         <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_FingerTipAssembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="pinky_pp2mp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="pinky_pp2mp">
+      <parent link="pinky_pp"/>
+      <child link="pinky_pp2mp_jointbody"/>
+      <origin xyz="0.0004999999999844908 -2.39390297194962e-18 0.032999999999999946" rpy="-1.1102230246251565e-16 0.0 -1.1102230246251565e-16"/>
+      <axis xyz="-2.7755575615628914e-16 -1.0000000000000007 -2.498001805406602e-16"/>
+      <limit lower="-0.3490658503988659" upper="2.2689280275926285" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="pinky_pp2mp_offset">
+      <parent link="pinky_pp2mp_jointbody"/>
+      <child link="pinky_mp"/>
+      <origin xyz="4.630531374131085e-18 3.7088372491485756e-17 3.145406773126967e-17" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="pinky_fingertip">
+      <inertial>
+         <origin xyz="-0.009 0.0 0.04" rpy="0.0 0.0 0.0"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <link name="pinky_mp2pinky_fingertip_fixed_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="pinky_mp2pinky_fingertip_fixed">
+      <parent link="pinky_mp"/>
+      <child link="pinky_mp2pinky_fingertip_fixed_jointbody"/>
+      <origin xyz="-0.009 0.0 0.04" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <joint type="fixed" name="pinky_mp2pinky_fingertip_fixed_offset">
+      <parent link="pinky_mp2pinky_fingertip_fixed_jointbody"/>
+      <child link="pinky_fingertip"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="middle_um">
+      <inertial>
+         <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
+         <mass value="0.006625913032045117"/>
+         <inertia ixx="4.786348664569036e-07" iyy="4.4192916777269033e-07" izz="2.7095034582421024e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="AP-Assembly">
+         <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_AP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="middle_abd_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="middle_abd">
+      <parent link="palm"/>
+      <child link="middle_abd_jointbody"/>
+      <origin xyz="4.881579836291013e-18 -8.567697285510997e-18 0.03" rpy="1.5707963267948966 1.5707963267948966 0.0"/>
+      <axis xyz="-9.645057161491277e-31 -1.6653345369377348e-16 -0.9999999999999998"/>
+      <limit lower="-0.5235987755982988" upper="0.5235987755982988" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="middle_abd_offset">
+      <parent link="middle_abd_jointbody"/>
+      <child link="middle_um"/>
+      <origin xyz="-0.019999999999999987 -3.771356811665857e-18 1.701695755040975e-18" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="middle_pp">
+      <inertial>
+         <origin xyz="0.0015215641155183913 3.409155126104343e-06 0.019988197676665105" rpy="-0.0008675700761155622 0.013815007172908844 0.001849376719566181"/>
+         <mass value="0.023556963904505242"/>
+         <inertia ixx="4.4203229364973464e-06" iyy="4.276694367220302e-06" izz="1.0089823927588865e-06" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="M-PP-Assembly">
+         <origin xyz="0.0015215641155183913 3.409155126104343e-06 0.019988197676665105" rpy="-0.000867570076115562 0.013815007172908844 0.0018493767195661807"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_M-PP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="root2middle_pp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="root2middle_pp">
+      <parent link="middle_um"/>
+      <child link="root2middle_pp_jointbody"/>
+      <origin xyz="-8.326672684688675e-17 1.0477058897466563e-31 9.860761315262648e-32" rpy="0.0 -1.5707963267948963 0.0"/>
+      <axis xyz="1.1102230246251565e-16 -1.0000000000000004 -2.7755575615628914e-17"/>
+      <limit lower="-0.3490658503988659" upper="1.9198621771937625" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="root2middle_pp_offset">
+      <parent link="root2middle_pp_jointbody"/>
+      <child link="middle_pp"/>
+      <origin xyz="-8.011868568650901e-32 -1.0477058897466563e-31 -8.326672684688675e-17" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="middle_mp">
+      <inertial>
+         <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
+         <mass value="0.018229214728618118"/>
+         <inertia ixx="2.7483316705449915e-06" iyy="2.7260398150926247e-06" izz="5.982307965118894e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="FingerTipAssembly">
+         <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_FingerTipAssembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="middle_pp2mp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="middle_pp2mp">
+      <parent link="middle_pp"/>
+      <child link="middle_pp2mp_jointbody"/>
+      <origin xyz="0.0004999999999727624 -3.4694469519535125e-18 0.04600000000000015" rpy="0.0 0.0 0.0"/>
+      <axis xyz="1.1102230246251565e-16 -1.0000000000000004 -2.7755575615628914e-17"/>
+      <limit lower="-0.3490658503988659" upper="2.2689280275926285" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="middle_pp2mp_offset">
+      <parent link="middle_pp2mp_jointbody"/>
+      <child link="middle_mp"/>
+      <origin xyz="-5.421010862428354e-19 -1.0168910106364605e-31 -8.326672684688675e-17" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="middle_fingertip">
+      <inertial>
+         <origin xyz="-0.009 0.0 0.04" rpy="0.0 0.0 0.0"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <link name="middle_mp2middle_fingertip_fixed_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="middle_mp2middle_fingertip_fixed">
+      <parent link="middle_mp"/>
+      <child link="middle_mp2middle_fingertip_fixed_jointbody"/>
+      <origin xyz="-0.009 0.0 0.04" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <joint type="fixed" name="middle_mp2middle_fingertip_fixed_offset">
+      <parent link="middle_mp2middle_fingertip_fixed_jointbody"/>
+      <child link="middle_fingertip"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="ring_um">
+      <inertial>
+         <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
+         <mass value="0.006625913032045117"/>
+         <inertia ixx="4.786348664569036e-07" iyy="4.4192916777269033e-07" izz="2.7095034582421024e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="AP-Assembly">
+         <origin xyz="0.011354078973426326 -1.7071698548170895e-06 -3.5584781475470163e-06" rpy="-0.7312124368167698 -1.5694148998517659 -2.4105624217590647"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_AP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="ring_abd_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="ring_abd">
+      <parent link="palm"/>
+      <child link="ring_abd_jointbody"/>
+      <origin xyz="0.02151626244325177 0.001539966070889325 0.02082193721565796" rpy="-1.5359724334240115 1.3083608795701225 -3.054411807001147"/>
+      <axis xyz="2.0816681711721685e-16 -1.1102230246251565e-16 -0.9999999999999998"/>
+      <limit lower="-0.5235987755982988" upper="0.5235987755982988" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="ring_abd_offset">
+      <parent link="ring_abd_jointbody"/>
+      <child link="ring_um"/>
+      <origin xyz="-0.020000000000000052 4.640385298237959e-17 -5.421010862427522e-18" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="ring_pp">
+      <inertial>
+         <origin xyz="0.0015215641155183913 3.409155126104343e-06 0.019988197676665105" rpy="-0.0008675700761155622 0.013815007172908844 0.001849376719566181"/>
+         <mass value="0.023556963904505242"/>
+         <inertia ixx="4.4203229364973464e-06" iyy="4.276694367220302e-06" izz="1.0089823927588865e-06" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="M-PP-Assembly">
+         <origin xyz="0.0015215641155183913 3.409155126104343e-06 0.019988197676665105" rpy="-0.000867570076115562 0.013815007172908844 0.0018493767195661807"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_M-PP-Assembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="root2ring_pp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="root2ring_pp">
+      <parent link="ring_um"/>
+      <child link="root2ring_pp_jointbody"/>
+      <origin xyz="5.000422469950927e-17 2.7821222532288604e-17 -6.247486316027035e-19" rpy="0.0 -1.5707963267948963 0.0"/>
+      <axis xyz="0.0 -0.9999999999999998 -5.551115123125783e-17"/>
+      <limit lower="-0.3490658503988659" upper="1.9198621771937625" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="root2ring_pp_offset">
+      <parent link="root2ring_pp_jointbody"/>
+      <child link="ring_pp"/>
+      <origin xyz="6.247486316026924e-19 -2.7821222532288604e-17 5.000422469950927e-17" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="ring_mp">
+      <inertial>
+         <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
+         <mass value="0.018229214728618118"/>
+         <inertia ixx="2.7483316705449915e-06" iyy="2.7260398150926247e-06" izz="5.982307965118894e-07" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="FingerTipAssembly">
+         <origin xyz="0.0004395758025904904 2.294210842752089e-05 0.017234999921076924" rpy="-0.0002952414540531474 -0.13694120498566353 0.004582776782163111"/>
+         <geometry>
+            <mesh filename="package://viz/models/orca_v1/urdf/converted_FingerTipAssembly.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="ring_pp2mp_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="ring_pp2mp">
+      <parent link="ring_pp"/>
+      <child link="ring_pp2mp_jointbody"/>
+      <origin xyz="0.0004999999999727536 -3.2334689427772335e-19 0.046000000000000194" rpy="5.551115123125783e-17 0.0 1.1102230246251565e-16"/>
+      <axis xyz="0.0 -0.9999999999999998 -5.551115123125783e-17"/>
+      <limit lower="-0.3490658503988659" upper="2.2689280275926285" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="ring_pp2mp_offset">
+      <parent link="ring_pp2mp_jointbody"/>
+      <child link="ring_mp"/>
+      <origin xyz="6.5371804131346096e-18 1.5935858178068978e-17 -1.6822041242320552e-16" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="ring_fingertip">
+      <inertial>
+         <origin xyz="-0.009 0.0 0.04" rpy="0.0 0.0 0.0"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <link name="ring_mp2ring_fingertip_fixed_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="ring_mp2ring_fingertip_fixed">
+      <parent link="ring_mp"/>
+      <child link="ring_mp2ring_fingertip_fixed_jointbody"/>
+      <origin xyz="-0.009 0.0 0.04" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <joint type="fixed" name="ring_mp2ring_fingertip_fixed_offset">
+      <parent link="ring_mp2ring_fingertip_fixed_jointbody"/>
+      <child link="ring_fingertip"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <material name="white">
+      <color rgba="1 1 1 1"/>
+   </material>
+</robot>

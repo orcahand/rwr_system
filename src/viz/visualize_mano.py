@@ -39,7 +39,7 @@ class ManoHandVisualizer:
 
         # Create marker for joints
         joint_marker = Marker()
-        joint_marker.header.frame_id = "hand_root"
+        joint_marker.header.frame_id = "world"
         joint_marker.header.stamp = stamp
         joint_marker.ns = "joints"
         joint_marker.type = Marker.POINTS
@@ -85,7 +85,7 @@ class ManoHandVisualizer:
         ]
 
         bone_marker = Marker()
-        bone_marker.header.frame_id = "hand_root"
+        bone_marker.header.frame_id = "world"
         bone_marker.header.stamp = stamp
         bone_marker.ns = "bones"
         bone_marker.type = Marker.LINE_LIST
@@ -119,7 +119,7 @@ class ManoHandVisualizer:
         }
         for i, (axis_name, (axis_vector, color)) in enumerate(axes.items()):
             arrow_marker = Marker()
-            arrow_marker.header.frame_id = "hand_root"
+            arrow_marker.header.frame_id = "world"
             arrow_marker.header.stamp = stamp
             arrow_marker.ns = "frame"
             arrow_marker.type = Marker.ARROW
