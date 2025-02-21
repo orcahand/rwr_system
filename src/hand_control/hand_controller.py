@@ -239,6 +239,10 @@ class HandController(CalibrationClass):
         with self.motor_lock:
             return self._dxc.read_pos_vel_cur()[1]
 
+    def get_motor_temp(self):
+        with self.motor_lock:
+            return self._dxc.read_temperature() #[0]
+
     def wait_for_motion(self):
         while not all(self._dxc.read_status_is_done_moving()):
             time.sleep(0.01)
@@ -327,21 +331,21 @@ class HandController(CalibrationClass):
         else: # This will overwrite the current config file with the new offsets and we will lose all comments in the file
             if auto_calibrate:
                 self.auto_calibrate_fingers_with_pos(calib_current, maxCurrent) # Demo script for calibrating based on hardstops of design
-                time.sleep(0.3)
 
                 # Load the calibration file that have just been written by the previous function
-                with open(cal_yaml_fname, 'r') as cal_file:
-                    cal_data = yaml.load(cal_file, Loader=yaml.FullLoader)
+                
+                # with open(cal_yaml_fname, 'r') as cal_file:
+                #     cal_data = yaml.load(cal_file, Loader=yaml.FullLoader)
 
-                self.motor_id2init_pos = np.array(cal_data["motor_init_pos"])
+                # self.motor_id2init_pos = np.array(cal_data["motor_init_pos"])
+                
                 # This is called now that the self calibration has been done.
                 # It can be called after the init_joints function
-                self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
+                # self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
                 
                 # Write zero angles for all joints 
-                # TODO: Maybe put a different default position
-                joint_angles = np.zeros(len(self.motor_ids)) 
-                self.write_desired_joint_angles(joint_angles, calibrate=True)
+                # joint_angles = np.zeros(len(self.motor_ids)) 
+                # self.write_desired_joint_angles(joint_angles, calibrate=True)
             else:
                 # Manual calibration code
                 # Disable torque to allow the motors to move freely
@@ -448,8 +452,9 @@ class HandController(CalibrationClass):
             self.move_to_desired_positions(motor_pos_des)
         else:
             self.write_desired_motor_pos(motor_pos_des)
-            
+        
         time.sleep(0.005) # wait for the command to be sent
+        return motor_pos_des
 
 
     def get_mano_to_motor_ids_mapping(self):
@@ -509,8 +514,10 @@ class HandController(CalibrationClass):
         """
         joints_ratio_list = [0 for _ in range(17)]
         
-        calibration_ratios_file_name = self.find_latest_calibration_file("src/hand_control/calibration_yaml")
-        # calibration_ratios_file_name = "src/hand_control/calibration_yaml/calibration_ratios.yaml"
+        current_path = os.path.abspath(__file__)
+        current_path = os.path.dirname(current_path)
+        file_path = os.path.join(current_path, "calibration_yaml")        
+        calibration_ratios_file_name = self.find_latest_calibration_file(file_path)
         
         # Open the YAML file
         if not os.path.isfile(calibration_ratios_file_name):

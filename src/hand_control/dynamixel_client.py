@@ -36,6 +36,7 @@ ADDR_PRESENT_VELOCITY = 128
 ADDR_PRESENT_CURRENT = 126
 ADDR_PRESENT_POS_VEL_CUR = 126
 ADDR_MOVING_STATUS = 123
+ADDR_PRESENT_TEMPERATURE = 146
 
 # Data Byte Length
 LEN_OPERATING_MODE = 1
@@ -48,6 +49,7 @@ LEN_GOAL_PWM = 2
 LEN_GOAL_CURRENT = 2
 LEN_PROFILE_VELOCITY = 4
 LEN_MOVING_STATUS = 1
+LEN_PRESENT_TEMPERATURE = 1
 
 DEFAULT_POS_SCALE = 2.0 * np.pi / 4096  # 0.088 degrees
 # See http://emanual.robotis.com/docs/en/dxl/x/xh430-v210/#goal-velocity
@@ -192,6 +194,14 @@ class DynamixelClient:
             vel_scale=vel_scale if vel_scale is not None else DEFAULT_VEL_SCALE,
             cur_scale=cur_scale if cur_scale is not None else DEFAULT_CUR_SCALE,
         )
+
+        self._temp_reader = DynamixelTempReader(
+            self,
+            self.motor_ids,
+            address=ADDR_PRESENT_TEMPERATURE,
+            size=LEN_PRESENT_TEMPERATURE,
+        )
+
         self._moving_status_reader = DynamixelReader(self, self.motor_ids, ADDR_MOVING_STATUS, LEN_MOVING_STATUS)
         self._sync_writers = {}
 
@@ -291,6 +301,10 @@ class DynamixelClient:
         """Returns the last bit of moving status"""
         moving_status = self._moving_status_reader.read().astype(np.int8)
         return np.bitwise_and(moving_status, np.array([0x01] * len(moving_status)).astype(np.int8))
+
+    def read_temperature(self) -> np.ndarray:
+        """Reads and returns the present temperature for each motor (in deg C)."""
+        return self._temp_reader.read()
 
     def write_desired_pos(self, motor_ids: Sequence[int],
                           positions: np.ndarray):
@@ -547,6 +561,21 @@ class DynamixelPosVelCurReader(DynamixelReader):
         """Returns a copy of the data."""
         return (self._pos_data.copy(), self._vel_data.copy(),
                 self._cur_data.copy())
+
+class DynamixelTempReader(DynamixelReader):
+    """Reads present temperature (1 byte) for each Dynamixel motor."""
+    
+    def _initialize_data(self):
+        # We'll store one float per motor for the temperature values.
+        self._temp_data = np.zeros(len(self.motor_ids), dtype=np.float32)
+
+    def _update_data(self, index: int, motor_id: int):
+        # The raw value from the control table is 1 byte = 1 degree Celsius.
+        raw_val = self.operation.getData(motor_id, self.address, self.size)
+        self._temp_data[index] = float(raw_val)
+
+    def _get_data(self):
+        return self._temp_data.copy()
 
 
 # Register global cleanup function.

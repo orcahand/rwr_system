@@ -71,6 +71,7 @@ class CalibrationClass():
         target_positions = motor_positions.copy()
         precise_positions = motor_positions.copy()
 
+        # motor_start[3] = 0 # Initialize the motor_start array to all zeros.
         # Apply the calibration current to all motors.
         self.write_desired_motor_current(calibration_current * np.ones(len(self.motor_ids)))
         
@@ -119,7 +120,7 @@ class CalibrationClass():
         self.momentarily_release_torque()
         return precise_positions
 
-    def auto_calibrate_fingers_with_pos(self, calib_current=120, maxCurrent: int = 150):
+    def auto_calibrate_fingers_with_pos(self, calib_current=300, maxCurrent: int = 300):
             """
             Calibrate each finger by extending the MCP joint fully in both directions and recording the motor positions.
             """
@@ -303,6 +304,10 @@ class CalibrationClass():
 
             self.set_operating_mode(5)
             self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
+
+            self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
+            joint_angles = np.zeros(len(self.motor_ids)) 
+            self.write_desired_joint_angles(joint_angles, calibrate=True)
             time.sleep(0.2)
 
 
