@@ -15,7 +15,8 @@ class CalibrationClass():
     
     def move_to_desired_positions(self, desired_positions, position_increment=0.2, threshold=0.2):
         """
-        Incrementally move motors to their desired positions.
+        Incrementally move motors to their desired positions. This is used only when going to initial position that could be far 
+        from the current position. To avoid very fast movements.
 
         :param desired_positions: List of desired target positions for each motor.
         :param calibration_current: Current to apply to motors during movement.
@@ -151,7 +152,7 @@ class CalibrationClass():
             date_created = datetime.now().strftime("%Y-%m-%d_%H-%M")
             current_path = os.path.abspath(__file__)
             current_path = os.path.dirname(current_path)
-            file_path = os.path.join(current_path, "calibration_"+ date_created+".yaml")        
+            file_path = os.path.join(current_path, "calibration_yaml", "calibration_"+ date_created+".yaml")        
                 
             self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
             
@@ -168,6 +169,7 @@ class CalibrationClass():
             motor_pos_calib[wrist_motor_idx] = 0
 
             self.motor_id2init_pos = self.move_to_limit_and_get_pos(-1*motor_pos_calib*motors_directions, calibration_current=calib_current)
+            print("Initial position of motor 5 measured is {}".format(self.motor_id2init_pos[5]))
             
             self.momentarily_release_torque()
 
@@ -312,8 +314,7 @@ class CalibrationClass():
         Parameters:
             release_time (float): The duration (in seconds) for which the torque remains disabled.
         """
-
-        # TODO: Remove motor ID of wrist. 
+        # We don't reallease the torque from wrist because we don't want it to "fall"
         self.disable_torque(self.motor_ids[:-1])
         
         # Wait for the specified duration to allow the motors to relax.
