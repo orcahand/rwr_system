@@ -42,7 +42,7 @@ class CalibrationClass():
 
             # Command motors to move to the new target positions
             self.write_desired_motor_pos(new_positions)
-            time.sleep(0.08)
+            time.sleep(0.04)
 
             # Update the current positions
             current_positions = self.get_motor_pos()
@@ -54,7 +54,7 @@ class CalibrationClass():
         return current_positions
 
     # def move_to_limit_and_get_pos(self, motor_start, calibration_current = 180, position_increment=0.08, threshold=0.0002):
-    def move_to_limit_and_get_pos(self, motor_start, calibration_current=180, position_increment=0.1, threshold=0.0002):
+    def move_to_limit_and_get_pos(self, motor_start, calibration_current=180, position_increment=0.2, threshold=0.0002):
         """
         Incrementally move motors to their limits based on motor_start directions.
         Once all active motors (where motor_start != 0) have a position change smaller than the threshold,
@@ -71,7 +71,9 @@ class CalibrationClass():
         target_positions = motor_positions.copy()
         precise_positions = motor_positions.copy()
 
-        # motor_start[3] = 0 # Initialize the motor_start array to all zeros.
+        calibration_current = 300
+
+        motor_start[3] = 0 # Initialize the motor_start array to all zeros.
         # Apply the calibration current to all motors.
         self.write_desired_motor_current(calibration_current * np.ones(len(self.motor_ids)))
         
@@ -80,7 +82,7 @@ class CalibrationClass():
             # Update target positions only for motors still moving (motor_start != 0)
             target_positions += position_increment * (motor_start > 0) - position_increment * (motor_start < 0)
             self.write_desired_motor_pos(target_positions)
-            time.sleep(0.07)
+            time.sleep(0.019)
             
             # Get current positions and compute the change from the previous iteration
             current_positions = self.get_motor_pos()
@@ -97,9 +99,9 @@ class CalibrationClass():
                     positions = self.get_motor_pos()
                     for i in active_indices:
                         samples[i].append(positions[i])
-                        if i == 5:
+                        if i == 2:
                             print("positon of motor {} is {}".format(i, positions[i]))
-                    time.sleep(0.05)
+                    time.sleep(0.02)
 
                 # Compute the mean for each active motor and update the precise_positions array.
                 for i in active_indices:
@@ -308,7 +310,7 @@ class CalibrationClass():
             self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
             joint_angles = np.zeros(len(self.motor_ids)) 
             self.write_desired_joint_angles(joint_angles, calibrate=True)
-            time.sleep(0.2)
+            time.sleep(0.15)
 
 
     def momentarily_release_torque(self, release_time=0.2):
@@ -448,86 +450,96 @@ class CalibrationClass():
         return os.path.join(folder_path, latest_file)
     
 
-    # def move_to_limit_and_get_pos(self, motor_start, calibration_current=100, current_increment=10, max_current=200, movement_threshold=0.002, sample_count=4, sample_delay=0.05, timeout=15):
+    # def move_to_limit_and_get_pos(self, motor_start, calibration_current=100, current_increment=5, max_current=150, 
+    #                             movement_threshold=0.002, velocity_limit=0.8, velocity_reduction_factor=0.5, 
+    #                             sample_count=4, sample_delay=0.05, timeout=15):
     #     """
     #     Moves motors to their mechanical limits using pure current control with gradual ramping.
         
     #     This function first switches the motors into CURRENT_CONTROL mode (mode 0) and then:
-    #       - Commands an initial current (calibration_current) multiplied by motor_start (which indicates the desired direction)
-    #       - Monitors the motor positions. For each motor:
-    #           • If the position change (delta) between iterations is above the movement_threshold,
+    #     - Commands an initial current (calibration_current) multiplied by motor_start (which indicates the desired direction)
+    #     - Monitors the motor positions and velocities. For each motor:
+    #         • If the position change (delta) between iterations is above the movement_threshold,
     #             we assume the motor is moving freely and do not increase the current.
-    #           • If the delta is below the threshold and the commanded current is below max_current,
+    #         • If the delta is below the threshold and the commanded current is below max_current,
     #             the current is increased gradually (by current_increment).
-    #           • If the motor is already at max_current and the delta remains low, we mark that motor as finished.
+    #         • If the motor is already at max_current and the delta remains low, we mark that motor as finished.
+    #         • If the velocity exceeds velocity_limit, the current is reduced to slow the motor down.
     #     Once all targeted motors are finished or the timeout is reached, the function samples the motor positions
     #     several times and returns their average.
         
     #     Parameters:
-    #       motor_start (np.array): Array indicating desired movement directions (1 or -1) for each motor (0 to ignore).
-    #       calibration_current (int): Starting current (in mA) for all motors.
-    #       current_increment (int): Amount to increase the current when movement is insufficient.
-    #       max_current (int): Maximum current allowed.
-    #       movement_threshold (float): Threshold for detecting significant movement.
-    #       sample_count (int): Number of final samples to average.
-    #       sample_delay (float): Delay between final samples (in seconds).
-    #       timeout (float): Maximum time (in seconds) to run the calibration loop.
+    #     motor_start (np.array): Array indicating desired movement directions (1 or -1) for each motor (0 to ignore).
+    #     calibration_current (int): Starting current (in mA) for all motors.
+    #     current_increment (int): Amount to increase the current when movement is insufficient.
+    #     max_current (int): Maximum current allowed.
+    #     movement_threshold (float): Threshold for detecting significant movement.
+    #     velocity_limit (float): Maximum allowed velocity before reducing current.
+    #     velocity_reduction_factor (float): Factor to reduce the current when velocity is too high.
+    #     sample_count (int): Number of final samples to average.
+    #     sample_delay (float): Delay between final samples (in seconds).
+    #     timeout (float): Maximum time (in seconds) to run the calibration loop.
         
     #     Returns:
-    #       np.array: Final averaged motor positions.
+    #     np.array: Final averaged motor positions.
     #     """
     #     # Switch motors to current control mode (mode 0)
     #     self.set_operating_mode(0)
-        
+
+    #     calibration_current=30
+
     #     previous_positions = self.get_motor_pos()
     #     current_cmd = np.full(len(self.motor_ids), calibration_current, dtype=float)
     #     finished = np.zeros(len(self.motor_ids), dtype=bool)
         
     #     start_time = time.time()
-        
+
+
+    #     timeout = 2000
+
+    #     # Temp because thumb under construction
+    #     motor_start[3] = 0  # Initialize the motor_start array to all zeros.
+
     #     # Command the initial current for all motors (use motor_start to set the same direction for all)
-    #     self._dxc.write_desired_current(self.motor_ids, current_cmd * motor_start)
+    #     self._dxc.write_desired_current(self.motor_ids, current_cmd * np.sign(motor_start))
         
     #     while time.time() - start_time < timeout:
-    #         current_positions = self.get_motor_pos()
+    #         current_positions, velocities, _ = self._dxc.read_pos_vel_cur()
+    #         print(velocities)
     #         delta = np.abs(current_positions - previous_positions)
             
-    #         # Check each motor: if movement is small, ramp up current gradually.
     #         for i in range(len(self.motor_ids)):
-    #             # Skip motors not commanded or already finished.
     #             if motor_start[i] == 0 or finished[i]:
     #                 continue
+
+    #             if np.abs(velocities[i]) > velocity_limit:
+    #                 current_cmd[i] *= velocity_reduction_factor  # Reduce current if too fast
+    #                 print(f"Motor {self.motor_ids[i]} exceeding velocity limit! Reducing current.")
+
     #             if delta[i] >= movement_threshold:
-    #                 # Motor is moving sufficiently, so do not change current.
-    #                 pass
+    #                 pass  # Motor is moving sufficiently, do not change current.
     #             else:
-    #                 # Not moving much: increase current if not already at max.
     #                 if current_cmd[i] < max_current:
     #                     current_cmd[i] = min(current_cmd[i] + current_increment, max_current)
     #                 else:
-    #                     # At max and still little movement: assume limit reached.
-    #                     finished[i] = True
+    #                     finished[i] = True  # Assume limit reached.
             
-    #         # Apply the updated current commands.
-    #         self._dxc.write_desired_current(self.motor_ids, current_cmd * motor_start)
-            
+    #         self._dxc.write_desired_current(self.motor_ids, current_cmd * np.sign(motor_start))
     #         previous_positions = current_positions.copy()
-            
-    #         # Exit when all targeted motors are finished.
+
     #         if np.all((motor_start == 0) | finished):
     #             print("All targeted motors reached their mechanical limits.")
     #             break
-            
-    #         time.sleep(0.05)
+
     #     else:
     #         print("Timeout reached during calibration.")
-        
-    #     # Once done, sample the final positions several times and average.
+
+    #     # Sample final positions
     #     samples = np.zeros((sample_count, len(self.motor_ids)))
     #     for s in range(sample_count):
     #         samples[s, :] = self.get_motor_pos()
     #         time.sleep(sample_delay)
     #     final_positions = np.mean(samples, axis=0)
-        
+
     #     self.momentarily_release_torque()
     #     return final_positions
