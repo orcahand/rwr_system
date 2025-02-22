@@ -2,10 +2,12 @@
 
 import rclpy
 from rclpy.node import Node
+from std_srvs.srv import Trigger  # Import service
 from std_msgs.msg import Float32MultiArray
 import csv
 import os
 import datetime
+import numpy as np
 
 class HandDataLogger(Node):
     def __init__(self):
@@ -14,9 +16,9 @@ class HandDataLogger(Node):
         # Generate timestamp for filenames
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H")
 
-        # Define base directory where logs will be saved
-        base_dir = os.path.expanduser("~/data_logs")  
-
+        home_dir = os.path.expanduser("~")
+        base_dir = os.path.join(home_dir, "ROS2_Logs", "data_logs")                       
+                
         # Define subdirectories for different data types
         sub_dirs = {
             "current": os.path.join(base_dir, "current"),
@@ -30,27 +32,19 @@ class HandDataLogger(Node):
         for path in sub_dirs.values():
             os.makedirs(path, exist_ok=True)
 
-        # Open CSV files in their respective subdirectories
-        self.current_file = open(os.path.join(sub_dirs["current"], f"hand_current_{timestamp}.csv"), "w", newline="")
-        self.temperature_file = open(os.path.join(sub_dirs["temperature"], f"hand_temperature_{timestamp}.csv"), "w", newline="")
-        self.pos_des_file = open(os.path.join(sub_dirs["pos_des"], f"hand_pos_des_{timestamp}.csv"), "w", newline="")
-        self.pos_read_file = open(os.path.join(sub_dirs["pos_read"], f"hand_pos_read_{timestamp}.csv"), "w", newline="")
-        self.policy_file = open(os.path.join(sub_dirs["policy_output"], f"hand_policy_output_{timestamp}.csv"), "w", newline="")
+        # Create filenames and open CSV files
+        self.files = {}
+        self.writers = {}
+        for key, path in sub_dirs.items():
+            filename = os.path.join(path, f"hand_{key}_{timestamp}.csv")
+            self.files[key] = open(filename, "w", newline="")
+            self.writers[key] = csv.writer(self.files[key])
 
-        # Create CSV writers
-        self.current_writer = csv.writer(self.current_file)
-        self.temperature_writer = csv.writer(self.temperature_file)
-        self.pos_des_writer = csv.writer(self.pos_des_file)
-        self.pos_read_writer = csv.writer(self.pos_read_file)
-        self.policy_writer = csv.writer(self.policy_file)
 
-        # Write headers
+        # Write headers with actual motor IDs
         header = ["timestamp"] + [f"motor_{i}" for i in range(17)]
-        self.current_writer.writerow(header)
-        self.temperature_writer.writerow(header)
-        self.pos_des_writer.writerow(header)
-        self.pos_read_writer.writerow(header)
-        self.policy_writer.writerow(header)
+        for writer in self.writers.values():
+            writer.writerow(header)
 
         # Create subscribers
         self.current_sub = self.create_subscription(Float32MultiArray, "/hand/current", self.current_cb, 10)
@@ -62,31 +56,32 @@ class HandDataLogger(Node):
         self.get_logger().info(f"Data Logger node started. Saving logs in {base_dir}")
 
     def current_cb(self, msg: Float32MultiArray):
-        self.write_csv_row(self.current_writer, msg)
+        rounded_data = [round(val, 2) for val in msg.data]
+        self.write_csv_row(self.writers["current"], rounded_data)
 
     def temperature_cb(self, msg: Float32MultiArray):
-        self.write_csv_row(self.temperature_writer, msg)
+        self.write_csv_row(self.writers["temperature"], msg.data)
 
     def pos_des_cb(self, msg: Float32MultiArray):
-        self.write_csv_row(self.pos_des_writer, msg)
+        rounded_data = [round(val, 4) for val in msg.data]
+        self.write_csv_row(self.writers["pos_des"], rounded_data)
 
     def pos_read_cb(self, msg: Float32MultiArray):
-        self.write_csv_row(self.pos_read_writer, msg)
+        rounded_data = [round(val, 4) for val in msg.data]
+        self.write_csv_row(self.writers["pos_read"], rounded_data)
 
     def policy_output_cb(self, msg: Float32MultiArray):
-        self.write_csv_row(self.policy_writer, msg)
+        self.write_csv_row(self.writers["policy_output"], msg.data)
 
-    def write_csv_row(self, writer, msg: Float32MultiArray):
+    def write_csv_row(self, writer, data):
         timestamp = self.get_clock().now().nanoseconds / 1e9
-        row = [timestamp] + list(msg.data)
+        row = [timestamp] + list(data)
         writer.writerow(row)
 
     def destroy_node(self):
-        self.current_file.close()
-        self.temperature_file.close()
-        self.pos_des_file.close()
-        self.pos_read_file.close()
-        self.policy_file.close()
+        """Close all open files before shutting down"""
+        for file in self.files.values():
+            file.close()
         super().destroy_node()
 
 

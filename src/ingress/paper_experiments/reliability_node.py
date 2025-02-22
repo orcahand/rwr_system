@@ -25,7 +25,9 @@ class ReliabilityNode(Node):
         self.hand_scheme = self.load_hand_scheme(hand_scheme_path)
         
         self.gc_limits_lower, self.gc_limits_upper = self.get_joint_limits(self.hand_scheme)
-        
+    
+        self.initial_Calibration = True
+
         self.timer = self.create_timer(0.05, self.timer_callback)  # Update at 20 Hz
 
     def load_hand_scheme(self, path):
@@ -43,9 +45,6 @@ class ReliabilityNode(Node):
             gc_limits_lower[index] = 0.0
             gc_limits_upper[index] = 0.0
 
-        # gc_limits_lower[2] = np.deg2rad(20) #  rotate thumb to for better grasp (watch out - hard coded for old model)
-        # gc_limits_upper[2] = np.deg2rad(20)
-
         return gc_limits_lower, gc_limits_upper
 
     def timer_callback(self):
@@ -56,7 +55,8 @@ class ReliabilityNode(Node):
         sine_wave = (-math.cos(current_time * (2 * math.pi / self.motion_duration)) + 1) / 2
         self.joint_values = (1 - sine_wave) * self.gc_limits_lower + sine_wave * self.gc_limits_upper
 
-        if elapsed_time_since_recalibration >= self.recalibration_interval and np.allclose(self.joint_values, self.gc_limits_lower, atol=0.1):
+        if self.initial_Calibration or (elapsed_time_since_recalibration >= self.recalibration_interval and np.allclose(self.joint_values, self.gc_limits_lower, atol=0.1)):
+            self.initial_Calibration = False
             self.timer.cancel() # Cancel the timer
 
             self.get_logger().info("Stopping movement for initialization and auto-calibration")
