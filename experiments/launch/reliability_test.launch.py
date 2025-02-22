@@ -28,7 +28,6 @@ def generate_launch_description():
                 name="hand_control_node",
                 output="screen"
             ),
-
               
             # RELIABILITY TEST NODE
             Node(
@@ -38,8 +37,8 @@ def generate_launch_description():
                 output="log",
                 parameters=[
                     {"motion_duration": 4.0},
-                    {"recalibration_interval": 100.0},
-                    {"flexion_scalar": 0.7},
+                    {"recalibration_interval": 60.0},
+                    {"flexion_scalar": 0.6},
                     {"retarget/hand_scheme": os.path.join(
                         get_package_share_directory("viz"),
                         "models",
@@ -49,7 +48,6 @@ def generate_launch_description():
                 ],
             ),
             
-           
             # HAND DATA LOGGER NODE
             Node(
                 package="ingress",
