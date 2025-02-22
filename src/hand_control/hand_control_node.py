@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 import numpy as np
 from std_msgs.msg import Float32MultiArray, Bool
+from std_srvs.srv import Trigger  # Import Trigger service type
 import os
 from faive_system.src.hand_control.hand_controller import HandController
 
@@ -28,6 +29,8 @@ class HandControllerNode(Node):
         self.joint_angle_sub = self.create_subscription(Float32MultiArray, "/hand/policy_output", self.joint_angle_cb, 10)
         self.auto_calib_sub = self.create_subscription(Bool, "/hand/flag_auto_calib", self.auto_calib_callback, 10)
         
+        self.calib_service = self.create_service(Trigger, "/hand/start_auto_calib", self.auto_calib_callback_service)
+        
         # Publishers
         self.curr_pub = self.create_publisher(Float32MultiArray, "/hand/current", 10)
         self.temp_pub = self.create_publisher(Float32MultiArray, "/hand/temperature", 10)
@@ -36,7 +39,6 @@ class HandControllerNode(Node):
 
         # Timer: run at 20 Hz => every 0.05 s
         self.monitor_timer = self.create_timer(0.05, self.monitor_callback)
-
 
     def joint_angle_cb(self, msg):
         assert len(msg.data) == 17, "Expected 17 joint angles, got {}".format(
@@ -61,6 +63,23 @@ class HandControllerNode(Node):
             self.get_logger().info("Auto-calibration completed.")
             self.calibration_in_progress = False
 
+    from std_srvs.srv import Trigger
+
+
+    def auto_calib_callback_service(self, request, response):
+        self.get_logger().info("Auto-calibration requested.")
+        self.calibration_in_progress = True
+
+        self._hc.auto_calibrate_fingers_with_pos()
+
+        self.get_logger().info("Auto-calibration complete.")
+        self.calibration_in_progress = False
+
+        response.success = True
+        response.message = "Calibration complete"
+        return response
+
+
     def monitor_callback(self):
             """Runs at 20Hz to publish each motor’s current & temperature."""
             # Get current in mA
@@ -80,8 +99,6 @@ class HandControllerNode(Node):
             self.curr_pub.publish(curr_msg)
             self.temp_pub.publish(temp_msg)
             self.pos_read_pub.publish(pos_msg)
-
-
 
 def main(args=None):
     rclpy.init(args=args)

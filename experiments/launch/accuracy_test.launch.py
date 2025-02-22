@@ -31,15 +31,13 @@ def generate_launch_description():
     return LaunchDescription(
         [
           
-
-
-            # # HAND CONTROLLER NODE
-            # Node(
-            #     package="hand_control",
-            #     executable="hand_control_node.py",
-            #     name="hand_control_node",
-            #     output="screen"
-            # ),
+            # HAND CONTROLLER NODE
+            Node(
+                package="hand_control",
+                executable="hand_control_node.py",
+                name="hand_control_node",
+                output="screen"
+            ),
 
             # OAKD FRAME PUBLISHER NODE   # If program takes ages to load, OAK-D connection probably did not work for some reason.
             # Node(
@@ -58,7 +56,7 @@ def generate_launch_description():
                 output="log",
                 parameters=[
                     {"motion_duration": 4.0},
-                    {"recalibration_interval": 10.0},
+                    {"recalibration_interval": 30.0},
                     {"flexion_scalar": 0.4},
                     {"signal_type": "sine"},  # Use "step" if you want step signals, "sine" for sign waves
                     {"retarget/hand_scheme": os.path.join(
@@ -69,7 +67,13 @@ def generate_launch_description():
                     },
                 ],
             ),
-            
+            # HAND DATA LOGGER NODE
+            Node(
+                package="ingress",
+                executable="hand_data_logger_node.py",
+                name="hand_data_logger",
+                output="screen"
+            ),  
             
             # VISUALIZATION NODE
             Node(
