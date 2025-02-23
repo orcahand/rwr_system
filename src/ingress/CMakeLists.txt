@@ -37,8 +37,10 @@ install(PROGRAMS
 
 install(PROGRAMS
     paper_experiments/reliability_node.py
+    paper_experiments/display_image_node.py
     paper_experiments/accuracy_node.py
     paper_experiments/oakd_frame_publisher.py
+    paper_experiments/align_cam2april_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
