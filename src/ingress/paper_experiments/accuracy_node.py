@@ -13,8 +13,6 @@ class AccuracyNode(Node):
         super().__init__("accuracy_node")
         self.publisher_ = self.create_publisher(Float32MultiArray, "/hand/policy_output", 10)
         
-        self.auto_calib_pub = self.create_publisher(Bool, "/hand/flag_auto_calib", 10)
-
         self.motion_duration = self.declare_parameter("motion_duration", 10.0).value
         self.recalibration_interval = self.declare_parameter("recalibration_interval", 60.0).value
         self.flexion_scalar = self.declare_parameter("flexion_scalar", 1.0).value

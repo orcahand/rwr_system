@@ -36,8 +36,8 @@ class HandController(CalibrationClass):
         
         ### All configurations are here ### 
 
-        maxCurrent = 300
-        calibration_current = 300
+        maxCurrent = 400
+        calibration_current = 350
         
         baudrate = 3000000
 
@@ -392,8 +392,8 @@ class HandController(CalibrationClass):
 
         """
 
-        if calibrate:
-            joint_angles = np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
+        # if calibrate:
+        #     joint_angles = np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
             
             # joint_angles[1] = 30  
             # joint_angles[2] = 20
@@ -418,6 +418,13 @@ class HandController(CalibrationClass):
             # joint_angles[16] = 45
         
 
+        # joint_angles[1]  *= -1
+
+        joint_angles[5]  *= -1
+        joint_angles[8]  *= -1
+        joint_angles[11]  *= -1
+        joint_angles[14]  *= -1
+
         joint_angles_clipped = self.clip_joint_angles(joint_angles)
 
         joint_angles_normalized = joint_angles_clipped - [low for low,_ in self.mano_joints_rom_list]
@@ -429,8 +436,8 @@ class HandController(CalibrationClass):
             motor_pos_mapped[idx] = motor_anlges_from_ratio[i]
 
         # # Abduction of Index and Middle finger are mapped in reverse order
-        motor_pos_mapped[0] *=-1 # Thumb ABD
-        motor_pos_mapped[1] *=-1 # Thumb PIP
+        motor_pos_mapped[0] *=-1 # 
+        motor_pos_mapped[1] *=-1 # Thumb ABD
         
 
         motor_pos_mapped[4] *=-1 # Index ABD
@@ -441,11 +448,6 @@ class HandController(CalibrationClass):
         
         motor_pos_des = np.deg2rad(motor_pos_mapped) - self.motor_pos_norm + self.motor_id2init_pos
         
-        # print("Motor 5 current pos is {}".format(self.get_motor_pos()[5]))
-        # print("Motor 5 init pos is {}".format(self.motor_id2init_pos[5]))
-        # print("Motor 5 added pos is {}".format(np.deg2rad(motor_pos_mapped)[5]))
-        # print("Motor 5 pos des is {}".format(motor_pos_des[5]))
-
         if calibrate:
             # Move like this because the movement is big and joints will move too fast.
             # Creates overload error or breaks a tendon.
@@ -516,7 +518,7 @@ class HandController(CalibrationClass):
         
         current_path = os.path.abspath(__file__)
         current_path = os.path.dirname(current_path)
-        file_path = os.path.join(current_path, "calibration_yaml")        
+        file_path = os.path.join(current_path, "calibration_yaml")    
         calibration_ratios_file_name = self.find_latest_calibration_file(file_path)
         
         # Open the YAML file

@@ -54,7 +54,7 @@ class CalibrationClass():
         return current_positions
 
     # def move_to_limit_and_get_pos(self, motor_start, calibration_current = 180, position_increment=0.08, threshold=0.0002):
-    def move_to_limit_and_get_pos(self, motor_start, calibration_current=180, position_increment=0.2, threshold=0.0002):
+    def move_to_limit_and_get_pos(self, motor_start, calibration_current=180, position_increment=0.15, threshold=0.0002):
         """
         Incrementally move motors to their limits based on motor_start directions.
         Once all active motors (where motor_start != 0) have a position change smaller than the threshold,
@@ -71,9 +71,8 @@ class CalibrationClass():
         target_positions = motor_positions.copy()
         precise_positions = motor_positions.copy()
 
-        calibration_current = 300
+        calibration_current = 350
 
-        motor_start[3] = 0 # Initialize the motor_start array to all zeros.
         # Apply the calibration current to all motors.
         self.write_desired_motor_current(calibration_current * np.ones(len(self.motor_ids)))
         
@@ -82,7 +81,7 @@ class CalibrationClass():
             # Update target positions only for motors still moving (motor_start != 0)
             target_positions += position_increment * (motor_start > 0) - position_increment * (motor_start < 0)
             self.write_desired_motor_pos(target_positions)
-            time.sleep(0.019)
+            time.sleep(0.03)
             
             # Get current positions and compute the change from the previous iteration
             current_positions = self.get_motor_pos()
@@ -172,7 +171,6 @@ class CalibrationClass():
             motor_pos_calib[wrist_motor_idx] = 0
 
             self.motor_id2init_pos = self.move_to_limit_and_get_pos(-1*motor_pos_calib*motors_directions, calibration_current=calib_current)
-            print("Initial position of motor 5 measured is {}".format(self.motor_id2init_pos[5]))
             
             self.momentarily_release_torque()
 

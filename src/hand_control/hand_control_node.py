@@ -27,8 +27,8 @@ class HandControllerNode(Node):
 
         # Subscribers
         self.joint_angle_sub = self.create_subscription(Float32MultiArray, "/hand/policy_output", self.joint_angle_cb, 10)
-        self.auto_calib_sub = self.create_subscription(Bool, "/hand/flag_auto_calib", self.auto_calib_callback, 10)
-        
+
+        # Services        
         self.calib_service = self.create_service(Trigger, "/hand/start_auto_calib", self.auto_calib_callback_service)
         
         # Publishers
@@ -47,24 +47,11 @@ class HandControllerNode(Node):
         joint_angles = np.array(msg.data)
         joint_angles_deg = joint_angles * 180 / np.pi
         motor_pos_des = self._hc.write_desired_joint_angles(joint_angles_deg)
+        self.get_logger().info("Thumb angles received: {}".format(joint_angles_deg[1:5]))
 
         motor_pos_des_msg = Float32MultiArray()
         motor_pos_des_msg.data = motor_pos_des.tolist()
         self.pos_desired_pub.publish(motor_pos_des_msg)
-
-    def auto_calib_callback(self, msg):
-        """Triggered when reliability_node publishes that auto-calibration is needed."""
-        if msg.data and not self.calibration_in_progress:
-            self.get_logger().info("Received auto-calibration request. Starting calibration.")
-            self.calibration_in_progress = True
-
-            self._hc.auto_calibrate_fingers_with_pos()
-
-            self.get_logger().info("Auto-calibration completed.")
-            self.calibration_in_progress = False
-
-    from std_srvs.srv import Trigger
-
 
     def auto_calib_callback_service(self, request, response):
         self.get_logger().info("Auto-calibration requested.")
@@ -79,26 +66,25 @@ class HandControllerNode(Node):
         response.message = "Calibration complete"
         return response
 
-
     def monitor_callback(self):
-            """Runs at 20Hz to publish each motor’s current & temperature."""
-            # Get current in mA
-            motor_currents = self._hc.get_motor_cur()  # shape: (num_motors,)
+        """Runs at 20Hz to publish each motor’s current & temperature."""
+        # Get current in mA
+        motor_currents = self._hc.get_motor_cur()  # shape: (num_motors,)
 
-            # Get temperature in °C as uint8
-            motor_temps = self._hc.get_motor_temp()  # shape: (num_motors,)
+        # Get temperature in °C as uint8
+        motor_temps = self._hc.get_motor_temp()  # shape: (num_motors,)
 
-            motor_pos = self._hc.get_motor_pos()  # shape: (num_motors,)
+        motor_pos = self._hc.get_motor_pos()  # shape: (num_motors,)
 
 
-            # Convert data for publishing
-            curr_msg = Float32MultiArray(data=motor_currents.tolist())
-            temp_msg = Float32MultiArray(data=motor_temps.tolist())
-            pos_msg = Float32MultiArray(data=motor_pos.tolist())
+        # Convert data for publishing
+        curr_msg = Float32MultiArray(data=motor_currents.tolist())
+        temp_msg = Float32MultiArray(data=motor_temps.tolist())
+        pos_msg = Float32MultiArray(data=motor_pos.tolist())
 
-            self.curr_pub.publish(curr_msg)
-            self.temp_pub.publish(temp_msg)
-            self.pos_read_pub.publish(pos_msg)
+        self.curr_pub.publish(curr_msg)
+        self.temp_pub.publish(temp_msg)
+        self.pos_read_pub.publish(pos_msg)
 
 def main(args=None):
     rclpy.init(args=args)
