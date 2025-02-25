@@ -54,7 +54,7 @@ class CalibrationClass():
         return current_positions
 
     # def move_to_limit_and_get_pos(self, motor_start, calibration_current = 180, position_increment=0.08, threshold=0.0002):
-    def move_to_limit_and_get_pos(self, motor_start, calibration_current=180, position_increment=0.15, threshold=0.0002):
+    def move_to_limit_and_get_pos(self, motor_start, calibration_current=180, position_increment=0.15, threshold=0.0002, time_limit=15):
         """
         Incrementally move motors to their limits based on motor_start directions.
         Once all active motors (where motor_start != 0) have a position change smaller than the threshold,
@@ -71,8 +71,6 @@ class CalibrationClass():
         target_positions = motor_positions.copy()
         precise_positions = motor_positions.copy()
 
-        calibration_current = 350
-
         # Apply the calibration current to all motors.
         self.write_desired_motor_current(calibration_current * np.ones(len(self.motor_ids)))
         
@@ -81,7 +79,7 @@ class CalibrationClass():
             # Update target positions only for motors still moving (motor_start != 0)
             target_positions += position_increment * (motor_start > 0) - position_increment * (motor_start < 0)
             self.write_desired_motor_pos(target_positions)
-            time.sleep(0.03)
+            time.sleep(0.07)
             
             # Get current positions and compute the change from the previous iteration
             current_positions = self.get_motor_pos()
@@ -98,8 +96,8 @@ class CalibrationClass():
                     positions = self.get_motor_pos()
                     for i in active_indices:
                         samples[i].append(positions[i])
-                        if i == 2:
-                            print("positon of motor {} is {}".format(i, positions[i]))
+                        # if i == 2:
+                            # print("positon of motor {} is {}".format(i, positions[i]))
                     time.sleep(0.02)
 
                 # Compute the mean for each active motor and update the precise_positions array.
@@ -115,8 +113,9 @@ class CalibrationClass():
                 print("All targeted motors reached their limits.")
                 break
 
-            if time.time() - start_time >= 15:
+            if time.time() - start_time >= time_limit:
                 print("Time limit reached")
+                break
         
         self.momentarily_release_torque()
         return precise_positions
@@ -159,7 +158,7 @@ class CalibrationClass():
             self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
             
             # Calibrate the wrist pitch joint and keep it's initial position value.
-            wrist_init_pos = self.calibrate_wrist_pitch_pos(file_path, 20, maxCurrent, skip_calibration=True)
+            wrist_init_pos = self.calibrate_wrist_pitch_pos(file_path, 3, maxCurrent, skip_calibration=True)
             # Open the YAML file
             with open(file_path, "r") as yaml_file:
                 calibration_defs = yaml.safe_load(yaml_file)
@@ -351,11 +350,11 @@ class CalibrationClass():
 
             # Apply calibration current in one direction and record position
             motor_pos_calib[wrist_motor_idx] = calib_current
-            wrist_pos_extended = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.055, threshold=0.035)[wrist_motor_idx]
+            wrist_pos_extended = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.05, threshold=0.032, time_limit=5)[wrist_motor_idx]
 
             # Apply calibration current in the opposite direction and record position
             motor_pos_calib[wrist_motor_idx] = -calib_current
-            wrist_pos_flexed = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.055, threshold=0.035)[wrist_motor_idx]
+            wrist_pos_flexed = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.05, threshold=0.032, time_limit=8)[wrist_motor_idx]
 
             # Calculate the range of motion (ROM) for the wrist joint
             wrist_pos_diff = np.rad2deg(np.abs(wrist_pos_extended - wrist_pos_flexed))
