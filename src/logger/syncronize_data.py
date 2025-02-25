@@ -9,10 +9,12 @@ import numpy as np
 import h5py
 #from logger_node import TOPICS_TYPES  # Import the predefined topic types
 import cv2
-from logger_node import TOPICS_TYPES  # Import the predefined topic types
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Image
+# from depthMasking import get_image_depth_masked
+from colorMasking import generate_color_masks
+import time
 
 TOPICS_TYPES = {
     # FRANKA ROBOT
@@ -30,6 +32,10 @@ TOPICS_TYPES = {
     "/oakd_side_view/color_mask": Image,
     "/oakd_wrist_view/color_mask": Image,
     
+    "/oakd_front_view/color_mask": Image,
+    "/oakd_side_view/color_mask": Image,
+    "/oakd_wrist_view/color_mask": Image,
+
     "/task_description": String,  # New topic for task description
     
     # CAMERA PARAMETERS
@@ -93,8 +99,6 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                 print(f"Topic {topic} not found in the HDF5 file. Skipping...")
                 continue
             
-            
-            print(f"Processing topic: {topic}")
             topic_group = input_h5[topic]
 
             if topic == "/task_description":
@@ -112,8 +116,9 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                 output_h5.create_dataset(f"observations/images/{topic}", data=data)
                 continue
 
+            
             if TOPIC_TO_STRING[topic_type] == "Image":
-                # Sample images
+                # Sample images""
                 sampled_images = []
                 for t in desired_timestamps:
                     closest_idx = np.abs(topic_timestamps - t).argmin()
@@ -121,14 +126,16 @@ def sample_and_sync_h5(input_h5_path, output_h5_path, sampling_frequency, compre
                     sampled_images.append(topic_group[str(closest_timestamp)][:])
 
                 if resize_to is not None:
-                    sampled_images = [cv2.resize(img, resize_to, interpolation=cv2.INTER_LINEAR) for img in sampled_images]
+                        sampled_images = [cv2.resize(img, resize_to, interpolation=cv2.INTER_LINEAR) for img in sampled_images]
 
                 sampled_images = np.array(sampled_images)  # TxHxWxC
+                
                 chunk_size = (1,) + tuple(sampled_images.shape[1:])
                 if compress:
                     output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images, chunks = chunk_size, compression="lzf")
                 else:
                     output_h5.create_dataset(f"observations/images/{topic}", data=sampled_images, chunks = chunk_size)
+                    # output_h5.create_dataset(f"observations/images/masked_wrist", data=sampled_images, chunks = chunk_size)
 
             elif TOPIC_TO_STRING[topic_type] == "PoseStamped":
                 # Interpolate PoseStamped data

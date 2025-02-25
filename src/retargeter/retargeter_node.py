@@ -46,7 +46,7 @@ class RetargeterNode(Node):
             retargeter_cfg = None
 
         debug = self.get_parameter("debug").value
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = "cpu" # "cuda" if torch.cuda.is_available() else "cpu"
         include_wrist_and_tower = self.get_parameter("include_wrist_and_tower").value
 
         

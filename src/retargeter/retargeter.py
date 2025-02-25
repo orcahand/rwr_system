@@ -91,7 +91,7 @@ class Retargeter:
 
         self.target_angles = None
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = "cpu" # "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
 
         self.gc_limits_lower = GC_LIMITS_LOWER

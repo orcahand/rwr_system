@@ -11,6 +11,7 @@ from oakd_utils import PointCloudVisualizer, calibrate_with_aruco, compute_proje
 import numpy as np
 import yaml
 import os
+from colorMasking import get_cropped_and_collor_maps
 #!/usr/bin/env python3
 
 COLOR = True
@@ -164,9 +165,10 @@ class OakDDriver:
     
     def calibrate(self, frame):
         T_camera_marker = calibrate_with_aruco(frame, self.intrinsics, self.distortion_coeff)
-        if T_camera_marker is None:
-            print("Calibration failed")
-            return
+        T_camera_marker = np.ones((4, 4))
+        # if T_camera_marker is None:
+        #     print("Calibration failed")
+        #     return
         self.extrinsics = T_camera_marker
         self.projection_matrix = compute_projection_matrix(self.intrinsics, T_camera_marker)
         self.calibrated = True
@@ -199,7 +201,6 @@ class OakDDriver:
                     break
                 time.sleep(0.1)
 
-                
             device.setIrLaserDotProjectorBrightness(1200)
             qs = []
             qs.append(device.getOutputQueue("colorize", maxSize=1, blocking=False))
@@ -253,6 +254,7 @@ class OakDDriver:
                             if has_depth:
                                 try:
                                     depth = msgs["depth"].getFrame()
+                                    depth = cv2.resize(depth, (224,224), interpolation=cv2.INTER_LINEAR)
                                     color = msgs["colorize"].getCvFrame()
                                     rectified_left = msgs["rectified_left"].getCvFrame()
                                     rectified_right = msgs["rectified_right"].getCvFrame()
@@ -260,8 +262,44 @@ class OakDDriver:
                                     print(e)
                                     continue
                             color = msgs["colorize"].getCvFrame()
+
+                            if self.calibrated == False:
+                                if has_depth:
+                                    self.calibrate(color)
+                            
                             if self.calibrated == False:
                                 self.calibrate(color)
+                            
+                            
+                            color_yaml_path = os.path.join( os.path.dirname(os.path.abspath(__file__)), "get_color.yaml")            
+                            if not os.path.isfile(color_yaml_path):
+                                raise FileNotFoundError(f"Color file not found: {color_yaml_path}. \n Have you run the calibration script?")
+       
+                            with open(color_yaml_path, "r") as yaml_file:
+                                color_detected = yaml.safe_load(yaml_file)
+
+                            if color_detected not in ["red", "blue", "yellow"]:
+                                color_detected = None
+
+                            # color_detected = "yellow" # Blue 
+
+                            if self.camera_name == "wrist_view":
+                                color, color_masks = get_cropped_and_collor_maps(color, "wrist", color_detected, output_dir = None) 
+                            elif self.camera_name == "front_view":
+                                color, color_masks = get_cropped_and_collor_maps(color, "front", color_detected, output_dir = None) 
+                            elif self.camera_name == "side_view":
+                                color, color_masks = get_cropped_and_collor_maps(color, "side", color_detected, output_dir = None)
+                            else:
+                                print(f"Camera name '{self.camera_name}' not recognized, using empty color masks")
+                                color_masks = np.zeros(color.shape, dtype=np.uint8)
+                            
+                            # if self.calibrated == False:
+                            #     if has_depth:
+                            #         self.calibrate(color)
+
+                              
+                            color = cv2.resize(color, (224,224), interpolation=cv2.INTER_LINEAR)
+                            color_masks = cv2.resize(color_masks, (224,224), interpolation=cv2.INTER_LINEAR)
 
                             if self.visualize:
                                 cv2.imshow("color", color)
@@ -277,13 +315,15 @@ class OakDDriver:
                                     cv2.imshow("rectified_left", rectified_left)
                                     cv2.imshow("rectified_right", rectified_right)
 
+                          
                             rgb = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
                             if has_depth and self.visualize and depth is not None:
                                 pcd, rgbd = pcl_converter.rgbd_to_projection(depth, rgb)
 
                             if self.visualize and has_depth:
                                 pcl_converter.visualize_pcd()
-                                
+
+                            
                             if not has_depth:
                                 # Special case, for wrist camera, when no depth information is avaliable,
                                 # create dummy depth image
@@ -291,13 +331,16 @@ class OakDDriver:
                                     height, width, _ = color.shape
                                     depth = np.zeros((height, width), dtype=np.uint16)
 
+
                             if self.callback is not None:
                                 if self.camera_name is not None:
-                                    self.callback(color, depth, self.camera_name)
-                                else:
-                                    self.callback(color, depth)
-                        
+                                    # self.callback(color, depth, self.camera_name)
+                                    self.callback(color, depth, color_masks, self.camera_name)
 
+                                else:
+                                    # self.callback(color, depth)
+                                    self.callback(color, depth, color_masks)
+                                    
                 key = cv2.waitKey(1)
                 if key == ord("s"):
                     timestamp = str(int(time.time()))
