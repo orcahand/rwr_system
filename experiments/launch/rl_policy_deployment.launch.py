@@ -34,7 +34,7 @@ def generate_launch_description():
                          "policy_path": os.path.join(
                             get_package_share_directory('experiments'),
                             "cfgs",
-                            "2025-02-27_04-00-51_observation.npy",
+                            "2025-02-27_04-00-51_dof_poses.npy",
                         )
                     },
                 ],
