@@ -17,6 +17,7 @@ class AccuracyNode(Node):
         self.recalibration_interval = self.declare_parameter("recalibration_interval", 60.0).value
         self.flexion_scalar = self.declare_parameter("flexion_scalar", 1.0).value
         self.signal_type = self.declare_parameter("signal_type", "sine").value  # New parameter for signal type
+        self.calibration = self.declare_parameter("calibration", False).value
 
         self.start_time = time.time()
         self.last_recalibration_time = self.start_time
@@ -26,11 +27,12 @@ class AccuracyNode(Node):
         
         self.gc_limits_lower, self.gc_limits_upper = self.get_joint_limits(self.hand_scheme)
         
-        self.initial_Calibration = True
+        
+        self.initial_Calibration = False
         self.awaiting_response = False
         self.calib_client = self.create_client(Trigger, "/hand/start_auto_calib")
         
-        self.timer = self.create_timer(0.05, self.timer_callback)  # Update at 20 Hz
+        self.timer = self.create_timer(0.01, self.timer_callback)  # Update at 100 Hz
 
     def load_hand_scheme(self, path):
         if not path:
@@ -68,7 +70,7 @@ class AccuracyNode(Node):
             step_wave = 1 if (current_time % self.motion_duration) < (self.motion_duration / 2) else 0
             self.joint_values = (1 - step_wave) * self.gc_limits_lower + step_wave * self.gc_limits_upper
 
-        if self.initial_Calibration or (elapsed_time_since_recalibration >= self.recalibration_interval and np.allclose(self.joint_values, self.gc_limits_lower, atol=0.1)):
+        if self.calibration and (self.initial_Calibration or (elapsed_time_since_recalibration >= self.recalibration_interval) and np.allclose(self.joint_values, self.gc_limits_lower, atol=0.1)):
             self.timer.cancel() # Cancel the timer
 
             if not self.awaiting_response:  # Only request if no response is pending

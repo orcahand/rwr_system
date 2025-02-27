@@ -37,6 +37,11 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  run_rl_policy.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 
 # install the launch file
 install(DIRECTORY
