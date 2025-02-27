@@ -22,7 +22,7 @@ class AnglePublisher(Node):
         except: 
             self.policy_path = None
 
-            
+
         self.publisher_ = self.create_publisher(Float32MultiArray, 'hand/policy_output', 10)
         timer_period = 1.0 / 60.0  # 60 Hz
         self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -32,13 +32,13 @@ class AnglePublisher(Node):
 
         
 
-        if self.obs:
-            file_path = os.path.expanduser("~/Downloads/recs/2025-02-27_02-52-43_observation.npy")
-        else:
-            file_path = os.path.expanduser("~/Downloads/rec2/2025-02-27_04-00-51_dof_poses.npy")
+        # if self.obs:
+        #     file_path = os.path.expanduser("~/Downloads/recs/2025-02-27_02-52-43_observation.npy")
+        # else:
+        #     file_path = os.path.expanduser("~/Downloads/rec2/2025-02-27_04-00-51_dof_poses.npy")
         
-        print(f"Loading file from: {file_path}")
-        self.data = np.load(file_path)
+        print(f"Loading file from: {self.policy_path}")
+        self.data = np.load(self.policy_path)
         print(f"Loaded data shape: {self.data.shape}")
         
         self.index = 0
