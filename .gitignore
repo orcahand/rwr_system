@@ -15,3 +15,4 @@ recordings/*
 cal.yaml
 */temp/*
 src/hand_control/calibration_yaml/*
+src/viz/models/orca_v1/urdf*
