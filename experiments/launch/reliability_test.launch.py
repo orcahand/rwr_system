@@ -50,12 +50,12 @@ def generate_launch_description():
             ),
             
             # HAND DATA LOGGER NODE
-            Node(
-                package="ingress",
-                executable="hand_data_logger_node.py",
-                name="hand_data_logger",
-                output="screen"
-            ),
+            # Node(
+            #     package="ingress",
+            #     executable="hand_data_logger_node.py",
+            #     name="hand_data_logger",
+            #     output="screen"
+            # ),
             
             # VISUALIZATION NODE
             
