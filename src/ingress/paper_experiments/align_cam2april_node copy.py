@@ -8,9 +8,6 @@ from pupil_apriltags import Detector
 import math
 
 def calc_angle(y1, y2, y3):
-
-
-
     # camera_z_axis = np.array([0, 0, 1])
 
     # # Project the alignment vectors of both AprilTags into the z-plane defined by the camera's z-axis
@@ -88,7 +85,8 @@ with dai.Device(pipeline) as device:
 
     while not rospy.is_shutdown():
         videoIn = video.get()
-        frame = videoIn.getData().reshape((videoIn.getHeight(), videoIn.getWidth()))
+        frame = videoIn.getData().reshape((
+            videoIn.getHeight(), videoIn.getWidth()))
         frame = cv2.normalize(frame, None, 0, 255, cv2.NORM_MINMAX)
         frame = frame.astype(np.uint8)
 
