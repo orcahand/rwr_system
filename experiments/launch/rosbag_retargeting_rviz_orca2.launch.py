@@ -30,17 +30,17 @@ def generate_launch_description():
                             get_package_share_directory('viz'),
                             "rosbag",
                             "recordings",
-                            "recording_2024-11-20_16-20-01/",
+                            "recording_2024-12-06_11-49-32/",
                         )
                     },
                 ],
             ),
-            # Node(
-            #     package="hand_control",
-            #     executable="hand_control_node.py",
-            #     name="hand_control_node",
-            #     output="screen"
-            # ),
+            Node(
+                package="hand_control",
+                executable="hand_control_node.py",
+                name="hand_control_node",
+                output="screen"
+            ),
             
             # RETARGET NODE
             Node(
@@ -80,6 +80,18 @@ def generate_launch_description():
 
                 ],
             ),
+            
+            # SENSING NODE
+            Node(
+                package="ingress",
+                executable="sensing_node.py",
+                name="sensing_node",
+                output="log",
+                parameters=[
+                    {"baud_rate": 115200},
+                    {"device": "/dev/ttyACM0"},
+                ],
+            ),
 
         
             # VISUALIZATION NODE
@@ -95,7 +107,9 @@ def generate_launch_description():
                             "orca2_hand",
                             "scheme_orca2.yaml",
                         )
-                    }
+                    },
+                    {"freeze_joints": False},
+                    {"sensor_viz": True},
                 ],
                 output="screen",
             ),

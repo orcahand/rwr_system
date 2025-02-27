@@ -75,12 +75,24 @@ def generate_launch_description():
                 ],
             ),
 
-           # HAND CONTROLLER NODE
+        #    # HAND CONTROLLER NODE
+        #     Node(
+        #         package="hand_control",
+        #         executable="hand_control_node.py",
+        #         name="hand_control_node",
+        #         output="screen"
+        #     ),
+        
+            # SENSING NODE
             Node(
-                package="hand_control",
-                executable="hand_control_node.py",
-                name="hand_control_node",
-                output="screen"
+                package="ingress",
+                executable="sensing_node.py",
+                name="sensing_node",
+                output="log",
+                parameters=[
+                    {"baud_rate": 115200},
+                    {"device": "/dev/ttyACM0"},
+                ],
             ),
 
             

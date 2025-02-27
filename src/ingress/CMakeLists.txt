@@ -35,6 +35,13 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+    paper_experiments/reliability_node.py
+    paper_experiments/hand_data_logger_node.py
+    paper_experiments/accuracy_node.py
+    paper_experiments/oakd_frame_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 install(PROGRAMS
     rokoko/rokoko_node.py
@@ -46,6 +53,12 @@ install(PROGRAMS
 install(PROGRAMS
     webcam/webcam_mediapipe_ingress.py
     webcam/mediapipe_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+    sensing/sensing_node.py
+    sensing/sensing_ingress.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

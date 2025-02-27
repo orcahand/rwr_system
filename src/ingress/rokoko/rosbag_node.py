@@ -11,7 +11,6 @@ class RosbagNode(Node):
         self.declare_parameter("rosbag_path", rclpy.Parameter.Type.STRING)
         rosbag_path = self.get_parameter("rosbag_path").value
 
-        print(type(rosbag_path))
         if rosbag_path is None:
             self.get_logger().error('rosbag_path is not set! Please provide a valid rosbag path.')
             raise ValueError('rosbag_path cannot be None.')

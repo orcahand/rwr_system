@@ -40,17 +40,17 @@ def generate_launch_description():
                 ],
             ),
             
-            # PROCESSING NODE
-            Node(
-                package="processing",
-                executable="processing_node.py",
-                name="processing_node",
-                output="screen",
-                parameters=[
-                    {"grayed_images_with_colored_mask": porcessing_config["grayed_images_with_colored_mask"]},
-                    {"color_string": porcessing_config["color_string"]},
-                ],
-            ),
+            # # PROCESSING NODE
+            # Node(
+            #     package="processing",
+            #     executable="processing_node.py",
+            #     name="processing_node",
+            #     output="screen",
+            #     parameters=[
+            #         {"grayed_images_with_colored_mask": porcessing_config["grayed_images_with_colored_mask"]},
+            #         {"color_string": porcessing_config["color_string"]},
+            #     ],
+            # ),
             
 
             # HAND CONTROLLER NODE

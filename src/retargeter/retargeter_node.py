@@ -94,7 +94,6 @@ class RetargeterNode(Node):
                     debug_dict["normalized_joint_pos"],
                     stamp=self.get_clock().now().to_msg(),
                 )
-
             self.joints_pub.publish(
                 numpy_to_float32_multiarray(np.deg2rad(joint_angles))
             )

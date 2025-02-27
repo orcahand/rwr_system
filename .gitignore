@@ -14,3 +14,4 @@ T_cam*
 recordings/*
 cal.yaml
 */temp/*
+src/hand_control/calibration_yaml/*
