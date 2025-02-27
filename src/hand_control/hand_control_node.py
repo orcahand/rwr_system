@@ -47,7 +47,7 @@ class HandControllerNode(Node):
         joint_angles = np.array(msg.data)
         joint_angles_deg = joint_angles * 180 / np.pi
         motor_pos_des = self._hc.write_desired_joint_angles(joint_angles_deg)
-        self.get_logger().info("Thumb angles received: {}".format(joint_angles_deg[1:5]))
+        # self.get_logger().info("Thumb angles received: {}".format(joint_angles_deg[1:5]))
 
         motor_pos_des_msg = Float32MultiArray()
         motor_pos_des_msg.data = motor_pos_des.tolist()

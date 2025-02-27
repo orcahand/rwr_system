@@ -281,7 +281,7 @@ class OakDDriver:
                             if color_detected not in ["red", "blue", "yellow"]:
                                 color_detected = None
 
-                            # color_detected = "yellow" # Blue 
+                            # color_detected = "red" # Blue 
 
                             if self.camera_name == "wrist_view":
                                 color, color_masks = get_cropped_and_collor_maps(color, "wrist", color_detected, output_dir = None) 

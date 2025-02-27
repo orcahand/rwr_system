@@ -54,7 +54,7 @@ class CalibrationClass():
         return current_positions
 
     # def move_to_limit_and_get_pos(self, motor_start, calibration_current = 180, position_increment=0.08, threshold=0.0002):
-    def move_to_limit_and_get_pos(self, motor_start, calibration_current=180, position_increment=0.15, threshold=0.0002, time_limit=15):
+    def move_to_limit_and_get_pos(self, motor_start, calibration_current=180, position_increment=0.15, threshold=0.0002, wait_time=0.06):
         """
         Incrementally move motors to their limits based on motor_start directions.
         Once all active motors (where motor_start != 0) have a position change smaller than the threshold,
@@ -71,6 +71,7 @@ class CalibrationClass():
         target_positions = motor_positions.copy()
         precise_positions = motor_positions.copy()
 
+        print("Calibration Current is {}".format(calibration_current))
         # Apply the calibration current to all motors.
         self.write_desired_motor_current(calibration_current * np.ones(len(self.motor_ids)))
         
@@ -79,7 +80,7 @@ class CalibrationClass():
             # Update target positions only for motors still moving (motor_start != 0)
             target_positions += position_increment * (motor_start > 0) - position_increment * (motor_start < 0)
             self.write_desired_motor_pos(target_positions)
-            time.sleep(0.07)
+            time.sleep(wait_time)
             
             # Get current positions and compute the change from the previous iteration
             current_positions = self.get_motor_pos()
@@ -113,7 +114,7 @@ class CalibrationClass():
                 print("All targeted motors reached their limits.")
                 break
 
-            if time.time() - start_time >= time_limit:
+            if time.time() - start_time >= 15:
                 print("Time limit reached")
                 break
         
@@ -158,7 +159,7 @@ class CalibrationClass():
             self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
             
             # Calibrate the wrist pitch joint and keep it's initial position value.
-            wrist_init_pos = self.calibrate_wrist_pitch_pos(file_path, 3, maxCurrent, skip_calibration=True)
+            wrist_init_pos = self.calibrate_wrist_pitch_pos(file_path, 20, maxCurrent, skip_calibration=True)
             # Open the YAML file
             with open(file_path, "r") as yaml_file:
                 calibration_defs = yaml.safe_load(yaml_file)
@@ -350,11 +351,11 @@ class CalibrationClass():
 
             # Apply calibration current in one direction and record position
             motor_pos_calib[wrist_motor_idx] = calib_current
-            wrist_pos_extended = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.05, threshold=0.032, time_limit=5)[wrist_motor_idx]
+            wrist_pos_extended = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.1, threshold=0.03, wait_time=0.1)[wrist_motor_idx]
 
             # Apply calibration current in the opposite direction and record position
             motor_pos_calib[wrist_motor_idx] = -calib_current
-            wrist_pos_flexed = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.05, threshold=0.032, time_limit=8)[wrist_motor_idx]
+            wrist_pos_flexed = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.1, threshold=0.03, wait_time=0.1)[wrist_motor_idx]
 
             # Calculate the range of motion (ROM) for the wrist joint
             wrist_pos_diff = np.rad2deg(np.abs(wrist_pos_extended - wrist_pos_flexed))

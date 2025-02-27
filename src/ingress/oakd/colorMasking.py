@@ -5,9 +5,9 @@ import os
 
 file_path = os.path.join(os.path.dirname(__file__),"fov_masks")
 
-WRIST_MASK_PATH = os.path.join(file_path, "mask_wrist_camera.png")
-FRONT_MASK_PATH = os.path.join(file_path, "mask_front_camera.png")
-SIDE_MASK_PATH = os.path.join(file_path, "mask_side_camera.png")
+WRIST_MASK_PATH = os.path.join(file_path, "front_mask.png")
+FRONT_MASK_PATH = os.path.join(file_path, "front_mask.png")
+SIDE_MASK_PATH = os.path.join(file_path, "side_mask.png")
 
 def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_dir=None):
     """
@@ -21,15 +21,23 @@ def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_
         dict: A dictionary containing masks for each color.
     """
 
-    # if camera_id == "wrist":
+    if camera_id == "wrist":
     #     mask = cv2.imread(WRIST_MASK_PATH)
+        mask = np.ones_like(image[0], dtype=np.uint8) * 255
+
     #     x, y, w, h = calculate_crop_coordinates(WRIST_MASK_PATH, tolerance=1)
-    # elif camera_id == "front":
-    #     mask = cv2.imread(FRONT_MASK_PATH)
-    #     x, y, w, h = calculate_crop_coordinates(FRONT_MASK_PATH, tolerance=1)
-    # elif camera_id == "side":
-    #     mask = cv2.imread(SIDE_MASK_PATH)
-    #     x, y, w, h = calculate_crop_coordinates(SIDE_MASK_PATH, tolerance=1)
+        image_masked = image.copy()
+    elif camera_id == "front":
+        mask = cv2.imread(FRONT_MASK_PATH)
+        x, y, w, h = calculate_crop_coordinates(FRONT_MASK_PATH, tolerance=1)
+        image_masked = cv2.bitwise_and(image, mask)
+        image_masked = image_masked[y:y+h, x:x+w]
+
+    elif camera_id == "side":
+        mask = cv2.imread(SIDE_MASK_PATH)
+        x, y, w, h = calculate_crop_coordinates(SIDE_MASK_PATH, tolerance=1)
+        image_masked = cv2.bitwise_and(image, mask)
+        image_masked = image_masked[y:y+h, x:x+w]
     # else:
     #     mask = np.ones_like(image[0], dtype=np.uint8) * 255
     #     print("Warning: No mask provided. Using default mask the keeps everything.")
@@ -38,14 +46,10 @@ def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_
         print("Error: No image provided.")
         return image
 
-    mask = np.ones_like(image[0], dtype=np.uint8) * 255
-    
-    image_masked = image.copy()
     
     # Crop the image based on black surrounding so we lose less information when resizing.
     # image_masked = image_masked[y:y+h, x:x+w]
 
-    # image_masked = cv2.cvtColor(image_masked, cv2.COLOR_BGR2RGB)
 
     if camera_id == "wrist":
         image_masked = cv2.rotate(image_masked, cv2.ROTATE_90_CLOCKWISE)
@@ -65,7 +69,7 @@ def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_
     color_ranges = {
         "blue": [(69, 62, 45), (131, 255, 233)],
         "yellow": [(9, 109, 89), (71, 255, 255)],
-        "red": [(10, 150, 125), (255, 200, 200)] # Red is LAB colorspace values
+        "red": [(32, 154, 110), (167, 200, 164)] # Red is LAB colorspace values
     }
 
     color_masks = {}
@@ -107,10 +111,11 @@ def get_cropped_and_collor_maps(image, camera_id, color_detected = None ,output_
 
         condition_mask = (mask_channel == 255)
         
-        image_masked = np.copy(gray_image_bgr)
-        image_masked[condition_mask,:] = (255,0,0)
-        
-    return image_masked, masks_combined
+        image_masked_grayed = np.copy(gray_image_bgr)
+        image_masked_grayed[condition_mask,:] = (255,0,0)
+    return image_masked, image_masked_grayed
+    
+    # return image_masked, masks_combined
 
 def calculate_crop_coordinates(mask_path, tolerance=1):
     """
