@@ -70,22 +70,35 @@ class TagProcessorNode(Node):
         # Create a copy of the frame to draw on
         frame_with_arrows = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
+        # Initialize variables for Y-axis directions
+        x1 = x2 = x3 = None
+        tilt1 = tilt2 = tilt3 = None
+
         # For each detected tag
         for tag in tags:
             tag_id = tag.tag_id
             center = tag.center
             corners = tag.corners
             pose_t = tag.pose_t
-            R = tag.pose_R
-            print(tag_id)
-            return
+            R = tag.pose_R     
+
+            # Assign the X-axis direction to x1, x2, or x3 based on tag ID
+            if tag_id == 0:
+                x1 = R[:, 0]  # X-axis direction of tag 0
+            if tag_id == 1:
+                x2 = R[:, 0]  # X-axis direction of tag 1
+            if tag_id == 2:
+                x3 = R[:, 0]  # X-axis direction of tag 2
+
+            # Compute the tilt angle (between the X-axis and camera's Z-axis)
+            tilt = self.calculate_tilt(R)
 
             # Draw arrows for orientation visualization
             start_point = (int(center[0]), int(center[1]))
             end_point_x = start_point + (R[:, 0][:2] * 100).astype(int)
             end_point_y = start_point + (R[:, 1][:2] * 100).astype(int)
-            cv2.arrowedLine(frame_with_arrows, start_point, tuple(end_point_x), (0, 0, 255), thickness=2)
-            cv2.arrowedLine(frame_with_arrows, start_point, tuple(end_point_y), (0, 255, 0), thickness=2)
+            cv2.arrowedLine(frame_with_arrows, start_point, tuple(end_point_x), (60, 60, 60), thickness=2)
+            cv2.arrowedLine(frame_with_arrows, start_point, tuple(end_point_y), (80, 80, 80), thickness=2)
 
             # Draw tag boundaries
             for i in range(4):
@@ -93,52 +106,71 @@ class TagProcessorNode(Node):
                 corner_2 = (int(corners[(i + 1) % 4][0]), int(corners[(i + 1) % 4][1]))
                 cv2.line(frame_with_arrows, corner_1, corner_2, (0, 255, 0), 2)
 
-            # Calculate the angle between Y-axis directions
+            # Display tilt and alignment status for each tag
             if tag_id == 0:
-                y1 = R[:, 1]  # Y-axis direction of tag 0
+                tilt1 = tilt
             if tag_id == 1:
-                y2 = R[:, 1]  # Y-axis direction of tag 1
+                tilt2 = tilt
             if tag_id == 2:
-                y3 = R[:, 1]  # Y-axis direction of tag 2
-                angle_prox, angle_dist = self.calc_angle(y1, y2, y3)
+                tilt3 = tilt
 
-                # Draw angles on the image
-                cv2.putText(
-                    frame_with_arrows,
-                    text=f"Proximal Angle: {angle_prox}",
-                    org=(250, 250),
-                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=1,
-                    color=(0, 0, 255) if angle_prox > 5 else (0, 255, 0),
-                    thickness=2,
-                )
+            # Draw the tilt angle as text on the image
+            tilt_color = (0, 255, 0) if np.abs(tilt - 90) < 2 else (0, 0, 255)  # green if tilt < 3 degrees, else red
+            cv2.putText(frame_with_arrows, f"Tilt: {tilt}", (int(center[0]), int(center[1] + 30)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, tilt_color, 2)
 
-                cv2.putText(
-                    frame_with_arrows,
-                    text=f"Distal Angle: {angle_dist}",
-                    org=(250, 330),
-                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=1,
-                    color=(0, 0, 255) if angle_dist > 5 else (0, 255, 0),
-                    thickness=2,
-                )
+        # Display angles for alignment (calculate angles between x1, x2, x3)
+        if x1 is not None and x2 is not None and x3 is not None:
+            angle_prox, angle_dist = self.calc_angle(x1, x2, x3)
+
+            # Display the angles on the image
+            cv2.putText(
+                frame_with_arrows,
+                text=f"Proximal Angle: {angle_prox}",
+                org=(250, 250),
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=1,
+                color=(0, 0, 255) if angle_prox > 5 else (0, 255, 0),
+                thickness=2,
+            )
+
+            cv2.putText(
+                frame_with_arrows,
+                text=f"Distal Angle: {angle_dist}",
+                org=(250, 330),
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=1,
+                color=(0, 0, 255) if angle_dist > 5 else (0, 255, 0),
+                thickness=2,
+            )
 
         # Convert back to ROS Image message and publish
         image_processed_msg = self.bridge.cv2_to_imgmsg(frame_with_arrows, encoding='bgr8')
         self.image_processed_pub.publish(image_processed_msg)
 
-    def calc_angle(self, y1, y2, y3):
-        y1[:2] /= np.linalg.norm(y1[:2])
-        y2[:2] /= np.linalg.norm(y2[:2])
-        y3[:2] /= np.linalg.norm(y3[:2])
+    def calc_angle(self, x1, x2, x3):
+        x1[:2] /= np.linalg.norm(x1[:2])
+        x2[:2] /= np.linalg.norm(x2[:2])
+        x3[:2] /= np.linalg.norm(x3[:2])
 
-        dot_product_proximal = np.dot(y1[:2], y2[:2])
-        dot_product_distal = np.dot(y2[:2], y3[:2])
+        dot_product_proximal = np.dot(x1[:2], x2[:2])
+        dot_product_distal = np.dot(x2[:2], x3[:2])
 
         angle_proximal = round(math.degrees(math.acos(dot_product_proximal)), 2)
         angle_distal = round(math.degrees(math.acos(dot_product_distal)), 2)
 
         return angle_proximal, angle_distal
+
+    def calculate_tilt(self, R):
+        # Compute the tilt angle between the X-axis of the tag and the Z-axis of the camera
+        tag_x_axis = R[:, 0]  # X-axis direction of the tag
+        camera_z_axis = np.array([0, 0, 1])  # Z-axis direction of the camera (aligned with the camera's optical axis)
+        
+        # Calculate the dot product
+        dot_product = np.dot(tag_x_axis, camera_z_axis)
+        tilt_angle = math.degrees(math.acos(dot_product))  # Convert the angle from radians to degrees
+
+        return round(tilt_angle, 2)
 
 def main(args=None):
     rclpy.init(args=args)

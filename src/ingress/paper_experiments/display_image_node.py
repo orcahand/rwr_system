@@ -31,7 +31,7 @@ class DisplayImageNode(Node):
     def image_callback(self, msg):
         try:
             # Convert the ROS image message to OpenCV format (Grayscale)
-            frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')  # Use 'mono8' for grayscale images
+            frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             
             # Display the image in a window using OpenCV
             cv2.imshow("Processed Image", frame)
