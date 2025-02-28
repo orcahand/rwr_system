@@ -14,7 +14,7 @@ class AccuracyNode(Node):
         self.publisher_ = self.create_publisher(Float32MultiArray, "/hand/policy_output", 10)
         
         self.motion_duration = self.declare_parameter("motion_duration", 10.0).value
-        self.recalibration_interval = self.declare_parameter("recalibration_interval", 60.0).value
+        self.recalibration_interval = self.declare_parameter("recalibration_interval", 600.0).value
         self.flexion_scalar = self.declare_parameter("flexion_scalar", 1.0).value
         self.signal_type = self.declare_parameter("signal_type", "sine").value  # New parameter for signal type
         self.calibration = self.declare_parameter("calibration", False).value
@@ -49,6 +49,12 @@ class AccuracyNode(Node):
             if index not in [6, 7]:
                 gc_limits_lower[index] = 0.0
                 gc_limits_upper[index] = 0.0
+
+        gc_limits_lower[6] = 0.0
+        gc_limits_upper[6] = np.pi/2
+        gc_limits_lower[7] = 0.0
+        gc_limits_upper[7] = np.pi/2
+
 
         # move the thumb away, such that markers on index can be seen better (watch out - hard coded for old model)
         # gc_limits_lower[1] = np.deg2rad(45) 

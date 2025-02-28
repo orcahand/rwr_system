@@ -37,19 +37,19 @@ def generate_launch_description():
         [
           
             
-            # IncludeLaunchDescription(
-            #     PythonLaunchDescriptionSource(
-            #         os.path.join(
-            #             get_package_share_directory('realsense2_camera'),
-            #             'launch',
-            #             'rs_launch.py'
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(
+                        get_package_share_directory('realsense2_camera'),
+                        'launch',
+                        'rs_launch.py'
                         
-            #         )accur    
-            #     ),
-            #     launch_arguments={
-            #         'rgb_camer.color_profile': '424x240x60',
-            #     }.items()
-            # ),
+                    )    
+                ),
+                launch_arguments={
+                    'rgb_camera.color_profile': '424x240x60',
+                }.items()
+            ),
 
             # Node(
             #     package='ingress',
@@ -59,12 +59,12 @@ def generate_launch_description():
             #     ),
             
             # # HAND CONTROLLER NODE
-            Node(
-                package="hand_control",
-                executable="hand_control_node.py",
-                name="hand_control_node",
-                output="screen"
-            ),
+            # Node(
+            #     package="hand_control",
+            #     executable="hand_control_node.py",
+            #     name="hand_control_node",
+            #     output="screen"
+            # ),
 
         
             
@@ -76,7 +76,7 @@ def generate_launch_description():
                 output="log",
                 parameters=[
                     {"calibration": False},
-                    {"motion_duration": 4.0},
+                    {"motion_duration": 20.0},
                     {"recalibration_interval": 10.0},
                     {"flexion_scalar": 0.4},
                     {"signal_type": "sine"},  # Use "step" if you want step signals, "sine" for sign waves
@@ -124,10 +124,9 @@ def generate_launch_description():
                 arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca_v1.rviz')],
                 ),
 
-            # # Node to start recording OAK-D camera frames and commanded angles to a rosbag
-            # ExecuteProcess(
-            #     cmd=['ros2', 'bag', 'record', '--output', rosbag_output_dir, 'image_raw', '/hand/policy_output'],
-            #     output='screen'
-            # )
+            ExecuteProcess(
+                cmd=['ros2', 'bag', 'record', '--output', rosbag_output_dir, '/camera/camera/color/image_raw', '/hand/policy_output'],
+                output='screen'
+            )
         ]
     )
