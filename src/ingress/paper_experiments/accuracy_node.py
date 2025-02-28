@@ -17,6 +17,11 @@ class AccuracyNode(Node):
         self.flexion_scalar = self.declare_parameter("flexion_scalar", 1.0).value
         self.signal_type = self.declare_parameter("signal_type", "sine").value  # New parameter for signal type
 
+        # New parameters for sweep signal
+        self.start_frequency = self.declare_parameter("start_frequency", 0.1).value
+        self.stop_frequency = self.declare_parameter("stop_frequency", 1.0).value
+        self.sweep_duration = self.declare_parameter("sweep_duration", 10.0).value
+
         self.start_time = time.time()
         self.last_recalibration_time = self.start_time
         self.calibration_in_progress = False
@@ -63,6 +68,11 @@ class AccuracyNode(Node):
         elif self.signal_type == "step":
             step_wave = 1 if (current_time % self.motion_duration) < (self.motion_duration / 2) else 0
             self.joint_values = (1 - step_wave) * self.gc_limits_lower + step_wave * self.gc_limits_upper
+        elif self.signal_type == "sweep":
+            t = current_time % self.sweep_duration
+            frequency = self.start_frequency + (self.stop_frequency - self.start_frequency) * (t / self.sweep_duration)
+            sweep_wave = (-math.cos(2 * math.pi * frequency * t) + 1) / 2
+            self.joint_values = (1 - sweep_wave) * self.gc_limits_lower + sweep_wave * self.gc_limits_upper
 
         if elapsed_time_since_recalibration >= self.recalibration_interval and np.allclose(self.joint_values, self.gc_limits_lower, atol=0.1):
             self.timer.cancel() # Cancel the timer

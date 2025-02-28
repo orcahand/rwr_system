@@ -62,8 +62,8 @@ class AnglePublisher(Node):
             [-0, 1.5], 
             [-0.1, 0.1],  
             [-0.7853981633974483, 0.7853981633974483], 
-            [-0.0, 1.4], 
-            [-0.0, 0.79],   
+            [0.3, 1.4], 
+            [0.3, 0.79],   
         ])
 
         self.lower_limit, self.upper_limit = self.joint_range_of_policy[:,0], self.joint_range_of_policy[:,1]
@@ -103,7 +103,9 @@ class AnglePublisher(Node):
             self.angles += angles * 0.167
         else:
             angles = self.smoothed_data[self.index, :]
+            print(angles.shape)
             self.angles = angles.flatten()
+
 
         # Ensure angles are within the specified limits
         self.angles = scale(self.angles, self.lower_limit, self.upper_limit)
