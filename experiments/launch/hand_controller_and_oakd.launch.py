@@ -60,6 +60,22 @@ def generate_launch_description():
                 name="hand_control_node",
                 output="screen"
             ),
+
+            # HAND DATA LOGGER NODE
+            Node(
+                package="ingress",
+                executable="hand_data_logger_node.py",
+                name="hand_data_logger",
+                output="screen"
+            ),
+
+            # SENSING NODE
+            Node(
+                package="ingress",
+                executable="sensing_node.py",
+                name="sensing_node",
+                output="log"
+            ),
             
  # VISUALIZATION NODE
             # Node(

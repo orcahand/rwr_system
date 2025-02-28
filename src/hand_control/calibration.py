@@ -159,7 +159,7 @@ class CalibrationClass():
             self.create_yaml_for_calibration([muscle_group.name for muscle_group in self.muscle_groups], file_path)
             
             # Calibrate the wrist pitch joint and keep it's initial position value.
-            wrist_init_pos = self.calibrate_wrist_pitch_pos(file_path, 20, maxCurrent, skip_calibration=True)
+            wrist_init_pos = self.calibrate_wrist_pitch_pos(file_path, 20, maxCurrent, skip_calibration=False)
             # Open the YAML file
             with open(file_path, "r") as yaml_file:
                 calibration_defs = yaml.safe_load(yaml_file)
@@ -351,11 +351,11 @@ class CalibrationClass():
 
             # Apply calibration current in one direction and record position
             motor_pos_calib[wrist_motor_idx] = calib_current
-            wrist_pos_extended = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.1, threshold=0.03, wait_time=0.1)[wrist_motor_idx]
+            wrist_pos_extended = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.1, threshold=0.05, wait_time=0.1)[wrist_motor_idx]
 
             # Apply calibration current in the opposite direction and record position
             motor_pos_calib[wrist_motor_idx] = -calib_current
-            wrist_pos_flexed = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.1, threshold=0.03, wait_time=0.1)[wrist_motor_idx]
+            wrist_pos_flexed = self.move_to_limit_and_get_pos(motor_pos_calib, calibration_current=calib_current, position_increment=0.1, threshold=0.065, wait_time=0.1)[wrist_motor_idx]
 
             # Calculate the range of motion (ROM) for the wrist joint
             wrist_pos_diff = np.rad2deg(np.abs(wrist_pos_extended - wrist_pos_flexed))

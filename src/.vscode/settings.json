@@ -1,0 +1,10 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/arturo/.local/share/mamba/envs/rwr_system/lib/python310/site-packages",
+        "/home/arturo/.local/share/mamba/envs/rwr_system/lib/python3.10/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/arturo/.local/share/mamba/envs/rwr_system/lib/python310/site-packages",
+        "/home/arturo/.local/share/mamba/envs/rwr_system/lib/python3.10/site-packages"
+    ]
+}

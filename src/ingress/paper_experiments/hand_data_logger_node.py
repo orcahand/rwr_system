@@ -14,7 +14,7 @@ class HandDataLogger(Node):
         super().__init__("hand_data_logger")
 
         # Generate timestamp for filenames
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
 
         home_dir = os.path.expanduser("~")
         base_dir = os.path.join(home_dir, "ROS2_Logs", "data_logs")                       
@@ -25,7 +25,8 @@ class HandDataLogger(Node):
             "temperature": os.path.join(base_dir, "temperature"),
             "pos_des": os.path.join(base_dir, "pos_des"),
             "pos_read": os.path.join(base_dir, "pos_read"),
-            "policy_output": os.path.join(base_dir, "policy_output")
+            "policy_output": os.path.join(base_dir, "policy_output"),
+            "sensing": os.path.join(base_dir, "sensing")
         }
 
         # Create directories if they don't exist
@@ -52,6 +53,8 @@ class HandDataLogger(Node):
         self.pos_des_sub = self.create_subscription(Float32MultiArray, "/hand/pos_des", self.pos_des_cb, 10)
         self.pos_read_sub = self.create_subscription(Float32MultiArray, "/hand/pos_read", self.pos_read_cb, 10)
         self.policy_output_sub = self.create_subscription(Float32MultiArray, "/hand/policy_output", self.policy_output_cb, 10)
+        self.sensing = self.create_subscription(Float32MultiArray, "/fsr_readings", self.sensing_cb, 10)
+
 
         self.get_logger().info(f"Data Logger node started. Saving logs in {base_dir}")
 
@@ -72,6 +75,9 @@ class HandDataLogger(Node):
 
     def policy_output_cb(self, msg: Float32MultiArray):
         self.write_csv_row(self.writers["policy_output"], msg.data)
+
+    def sensing_cb(self, msg: Float32MultiArray):
+        self.write_csv_row(self.writers["sensing"], msg.data)
 
     def write_csv_row(self, writer, data):
         timestamp = self.get_clock().now().nanoseconds / 1e9

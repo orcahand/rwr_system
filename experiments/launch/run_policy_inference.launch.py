@@ -17,6 +17,7 @@ def generate_launch_description():
     policy_ckpt_path = LaunchConfiguration('policy_ckpt_path')
 
     # Define the node with parameters from the launch arguments
+    # Color and mask
     policy_node = Node(
         package='experiments',
         executable='model_inference_node.py',
@@ -24,29 +25,16 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'camera_topics': [
-                "/oakd_front_view/color", "/oakd_side_view/color", "/oakd_wrist_view/color"
+                "/oakd_front_view/color", "/oakd_side_view/color", "/oakd_wrist_view/color",
+                "/oakd_front_view/color_mask", "/oakd_side_view/color_mask", "/oakd_wrist_view/color_mask"
             ],
             'camera_names': [
-                "oakd_front_view_images", "oakd_side_view_images", "oakd_wrist_view_images"
+                "oakd_front_view_images", "oakd_side_view_images", "oakd_wrist_view_images",
+                "oakd_front_view_images_mask", "oakd_side_view_images_mask", "oakd_wrist_view_images_mask"
             ],
             "policy_ckpt_path": policy_ckpt_path
          }]
     )
-    # policy_node = Node(
-    #     package='experiments',
-    #     executable='model_inference_node.py',
-    #     name="model_inference",
-    #     output='screen',
-    #     parameters=[{
-    #         'camera_topics': [
-    #             "/oakd_front_view/color", "/oakd_side_view/color", "/oakd_wrist_view/color", "/oakd_front_view/color_mask", "/oakd_side_view/color_mask", "/oakd_wrist_view/color_mask"
-    #         ],
-    #         'camera_names': [
-    #             "oakd_front_view_images", "oakd_side_view_images", "oakd_wrist_view_images", "oakd_front_view_masks", "oakd_side_view_masks", "oakd_wrist_view_masks"
-    #         ],
-    #         "policy_ckpt_path": policy_ckpt_path
-    #      }]
-    # )
 
     # Return the LaunchDescription with all the launch arguments and nodes
     return LaunchDescription([
