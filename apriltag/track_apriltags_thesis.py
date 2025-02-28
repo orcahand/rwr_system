@@ -11,7 +11,7 @@ Script for tracking N manually chosen bounding boxes within video. Point this sc
 Note: OpenCV installation can sometimes have trouble with cv2.legacy.MultiTracker_create(), the version that worked is:
 opencv-contrib-python 4.5.2.52
 """
-import rosbag2_py
+import rosbag
 from pupil_apriltags import Detector
 import click
 import cv2
@@ -21,11 +21,7 @@ import pandas as pd
 import copy
 import os
 import datetime
-from sensor_msgs_py import point_cloud2
-from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-from rclpy.serialization import deserialize_message
-from std_msgs.msg import Float32MultiArray
+
 
 
 
@@ -80,39 +76,32 @@ def track_markers(filepath_data: str, start_frame: int, end_frame: int):
 
     bag_file = filepath_data # Path to the bag file
 
-    # Initialize rosbag2 reader
-    storage_options = rosbag2_py.StorageOptions(uri=bag_file, storage_id='sqlite3')
-    converter_options = rosbag2_py.ConverterOptions('', '')
-    reader = rosbag2_py.SequentialReader()
-    reader.open(storage_options, converter_options)
-    bridge = CvBridge()
-
     # Get the number of messages in the bag file
-    total_messages = 0
-    while reader.has_next():
-        reader.read_next()
-        total_messages += 1
+    bag = rosbag.Bag(bag_file, 'r')
+    total_messages = bag.get_message_count(topic_filters=['/image_raw'])
+    bag.close()
 
-    # Reinitialize the reader to iterate over the messages again
-    reader = rosbag2_py.SequentialReader()
-    reader.open(storage_options, converter_options)
-
+ 
     # Iterate over the messages in the bag file
     frames = []
     timestamps = []
     count = 0
+    bag = rosbag.Bag(bag_file, 'r')
 
-    while reader.has_next():
-        (topic, data, t) = reader.read_next()
-        if topic == '/camera/camera/color/image_raw':
-            img_msg = deserialize_message(data, Image)
-            frame = bridge.imgmsg_to_cv2(img_msg, 'bgr8')
-            frames.append(frame)
-            timestamps.append(t)
-            # Update progress
-            count += 1
-            progress = count / total_messages * 100
-            print(f"Progress: {progress:.2f}%")
+    for topic, msg, t in bag.read_messages(topics=['/image_raw']):
+        # Convert the image message to a NumPy array
+        frame = np.frombuffer(msg.data, dtype=np.uint8).reshape((msg.height, msg.width, -1))  
+        frame = frame.squeeze()
+
+        frames.append(frame)
+        timestamps.append(t)
+        # Update progress
+        count += 1
+        progress = count / total_messages * 100
+        print(f"Progress: {progress:.2f}%")
+
+    bag.close()
+
 
     total_frames = len(frames)
     if not end_frame:
@@ -120,27 +109,24 @@ def track_markers(filepath_data: str, start_frame: int, end_frame: int):
     # Initialize variables
     framenum = 0
 
+
     coords = []
     framenum = 0
     colors = [(0, 0, 255), (0, 165, 255), (0, 255, 255)]
-
 
     #########
     previous_tag_ids = {}
 
     for frame in frames:
         show_frame = copy.deepcopy(frame)
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        print(show_frame.shape)
-        # show_frame = cv2.cvtColor(show_frame, cv2.COLOR_GRAY2RGB)
+        show_frame = cv2.cvtColor(show_frame, cv2.COLOR_GRAY2RGB)
 
         framenum += 1
         if framenum < start_frame:
             continue
         if framenum > end_frame:
             break
-        tags = at_detector.detect(gray_frame, estimate_tag_pose=True, camera_params=(camera_fx, camera_fy, camera_cx, camera_cy), tag_size=0.23)
-        # tags = at_detector.detect(frame, estimate_tag_pose=True, camera_params=(camera_fx, camera_fy, camera_cx, camera_cy), tag_size=0.23)
+        tags = at_detector.detect(frame, estimate_tag_pose=True, camera_params=(camera_fx, camera_fy, camera_cx, camera_cy), tag_size=0.23)
 
         if len(tags) != num_tags:
             detected_tag_ids = []
@@ -267,20 +253,24 @@ def track_markers(filepath_data: str, start_frame: int, end_frame: int):
 
     print("Ground-Truth Marker Positions saved to data_files/groundtruth_marker_positions.csv successfully.")
 
-    print(timestamps)
-    if len(timestamps) > 1:
-        time_diffs = np.diff(timestamps)
-        avg_time_diff = np.mean(time_diffs)
-        frequency = 1.0 / avg_time_diff
-        print(f"Frequency of the signal: {frequency:.2f} Hz")
-    else:
-        print("Not enough timestamps to calculate frequency")
 
-    joint_commands_topic = "/hand/policy_output"
+    ekf_joint_states_topic = "/faive/ekf_joint_states"
+    joint_states_topic = "/faive/joint_states"
+    joint_commands_topic = "/faive/commanded_joint_states"
 
-    # Reset reader to read joint commands
-    reader = rosbag2_py.SequentialReader()
-    reader.open(storage_options, converter_options)
+    bag = rosbag.Bag(bag_file, 'r')
+
+    ekf_data = {
+        "Timestamp": [],
+        "root2index_pp": [],
+        "index_pp2mp": []
+    }
+
+    joint_data = {
+        "Timestamp": [],
+        "root2index_pp": [],
+        "index_pp2mp": []
+    }
 
     command_data = {
         "Timestamp": [],
@@ -288,15 +278,38 @@ def track_markers(filepath_data: str, start_frame: int, end_frame: int):
         "index_pp2mp": []
     }
 
-    while reader.has_next():
-        (topic, data, t) = reader.read_next()
-        if topic == joint_commands_topic:
-            msg = deserialize_message(data, Float32MultiArray)
+    for topic, msg, t in bag.read_messages(topics=[ekf_joint_states_topic, joint_states_topic, joint_commands_topic]):
+        if topic == ekf_joint_states_topic:
+            ekf_data["Timestamp"].append(t)
+            ekf_data["root2index_pp"].append(msg.position[msg.name.index("root2index_pp")])
+            ekf_data["index_pp2mp"].append(msg.position[msg.name.index("index_pp2mp")])
+        elif topic == joint_states_topic:
+            joint_data["Timestamp"].append(t)
+            joint_data["root2index_pp"].append(msg.position[msg.name.index("root2index_pp")])
+            joint_data["index_pp2mp"].append(msg.position[msg.name.index("index_pp2mp")])
+        elif topic == joint_commands_topic:
             command_data["Timestamp"].append(t)
-            command_data["root2index_pp"].append(msg.data[6])
-            command_data["index_pp2mp"].append(msg.data[7])
+            command_data["root2index_pp"].append(msg.position[msg.name.index("root2index_pp")])
+            command_data["index_pp2mp"].append(msg.position[msg.name.index("index_pp2mp")])
 
+
+    bag.close()
+
+    # Create DataFrames using pandas
+    ekf_df = pd.DataFrame(ekf_data)
+    joint_df = pd.DataFrame(joint_data)
     command_df = pd.DataFrame(command_data)
+
+
+    # Save DataFrames to CSV files
+    ekf_df.to_csv("data_files/ekf_joint_states.csv", index=False)
+    ekf_df.to_csv(f"data_log/ekf_joint_states_{formatted_timestamp}.csv", index=False)
+    print("Proprioception Angles saved to data_files/ekf_joint_states.csv successfully.")
+    
+
+    joint_df.to_csv("data_files/joint_states.csv", index=False)
+    joint_df.to_csv(f"data_log/joint_states_{formatted_timestamp}.csv", index=False)
+    print("Proprioception Angles saved to data_files/joint_states.csv successfully.")
 
     command_df.to_csv("data_files/commanded_joint_states.csv", index=False)
     command_df.to_csv(f"data_log/commanded_joint_states_{formatted_timestamp}.csv", index=False)
