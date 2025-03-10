@@ -93,7 +93,7 @@ def generate_launch_description():
                 ),
                 # Timer to shut down the launch after 1 hour
             TimerAction(
-                period=7200.0,  # 1 hour in seconds
+                period=10800.0,  # 3 hour in seconds
                 actions=[Shutdown()]
                 )
         ]
