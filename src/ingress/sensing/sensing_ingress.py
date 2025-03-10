@@ -32,16 +32,26 @@ class ArduinoDriver:
 
     def read_from_device(self):
         while self.running:
-            if self.serial_connection.in_waiting > 0:
-                try:
-                    # Read a line of data from the serial port
-                    line = self.serial_connection.readline().decode('utf-8').strip()
-                    # Assuming the data is in JSON format
-                    data = json.loads(line)
+            try:
+                line = self.serial_connection.readline().decode('utf-8', errors='ignore').strip()
+                if line:
+                    # Convert space-separated values to a list of floats
+                    values = list(map(float, line.split()))
+                    # Send as dictionary (modify keys as needed)
+                    data = {
+                        "thumb": values[2],
+                        "index": values[1],
+                        "middle": values[3],
+                        "ring": values[0],
+                        "pinky": values[4]
+                    }
                     self.callback(data)
-                except Exception as e:
-                    print(f"Error reading from device: {e}")
+            except ValueError:
+                print(f"Invalid numeric data received: {line}")
+            except Exception as e:
+                print(f"Error reading from device: {e}")
             time.sleep(0.01)
+
 
     def generate_random_values(self):
         while self.running:
@@ -69,8 +79,8 @@ if __name__ == "__main__":
     def example_callback(data):
         print(f"Received data: {data}")
 
-    device = "/dev/ttyACM0"
-    baud_rate = 115200
+    device = "/dev/serial/by-id/usb-Arduino_LLC_Arduino_Nano_Every_8CB3769751544E5450202020FF054012-if00"
+    baud_rate = 9600
 
     driver = ArduinoDriver(callback=example_callback, device=device, baud_rate=baud_rate, debug=True)
     driver_thread = threading.Thread(target=driver.run)

@@ -29,7 +29,8 @@ class ReliabilityNode(Node):
         self.awaiting_response = False
         self.calib_client = self.create_client(Trigger, "/hand/start_auto_calib")
         
-        self.timer = self.create_timer(0.05, self.timer_callback)  # Update at 20 Hz
+        # self.timer = self.create_timer(0.05, self.timer_callback)  # Update at 20 Hz
+        self.timer = self.create_timer(0.02, self.timer_callback)  # Update at 100 Hz
 
     def load_hand_scheme(self, path):
         if not path:
@@ -42,34 +43,29 @@ class ReliabilityNode(Node):
         gc_limits_lower = np.deg2rad(np.array(hand_scheme["gc_limits_lower"]))
         gc_limits_upper = np.deg2rad(np.array(hand_scheme["gc_limits_upper"])) * self.flexion_scalar
 
-        for index in [0, 1, 2,  5, 8, 11, 14]:
+        for index in [1, 2, 3, 4,  5, 8, 11, 14]: # Wrist 0
             gc_limits_lower[index] = 0.0
             gc_limits_upper[index] = 0.0
+
+        gc_limits_lower[0] *= self.flexion_scalar
+        # gc_limits_upper[0] = 40.0
 
         return gc_limits_lower, gc_limits_upper
 
     def timer_callback(self):
-     
         current_time = time.time() - self.start_time
-        elapsed_time_since_recalibration = time.time() - self.last_recalibration_time
 
+        # Normal sine wave for non-wrist joints
         sine_wave = (-math.cos(current_time * (2 * math.pi / self.motion_duration)) + 1) / 2
-        self.joint_values = (1 - sine_wave) * self.gc_limits_lower + sine_wave * self.gc_limits_upper
+        joint_values = (1 - sine_wave) * self.gc_limits_lower + sine_wave * self.gc_limits_upper
 
-        # if self.initial_Calibration or (elapsed_time_since_recalibration >= self.recalibration_interval and np.allclose(self.joint_values, self.gc_limits_lower, atol=0.1)):
-        #     self.timer.cancel() # Cancel the timer
-
-        #     if not self.awaiting_response:  # Only request if no response is pending
-        #         self.initial_Calibration = False
-        #         self.request_calibration()
-
-        #     self.last_recalibration_time = time.time()  # Reset the recalibration time
-        #     self.start_time = time.time() - current_time # Reset the start time to continue smoothly
-        #     self.timer = self.create_timer(0.05, self.timer_callback) # Restart the timer
-
+        # Calculate wrist sine wave with half frequency (period doubled)
+        wrist_sine_wave = (-math.cos(current_time * (2 * math.pi / (4 * self.motion_duration))) + 1) / 2
+        # Override joint 0 (wrist) value using its own lower and upper limits
+        joint_values[0] = (1 - wrist_sine_wave) * self.gc_limits_lower[0] + wrist_sine_wave * self.gc_limits_upper[0]
 
         msg = Float32MultiArray()
-        msg.data = self.joint_values.tolist()
+        msg.data = joint_values.tolist()
         self.publisher_.publish(msg)
 
     def request_calibration(self):
