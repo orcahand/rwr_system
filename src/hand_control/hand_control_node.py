@@ -5,7 +5,7 @@ import numpy as np
 from std_msgs.msg import Float32MultiArray, Bool
 from std_srvs.srv import Trigger  # Import Trigger service type
 import os
-from faive_system.src.hand_control.hand_controller import HandController
+from faive_system.src.hand_control.hand_controller import OrcaHand
 
 class HandControllerNode(Node):
     def __init__(self, debug=False):
@@ -19,22 +19,17 @@ class HandControllerNode(Node):
         port = self.get_parameter("hand_controller/port").value
         baudrate = self.get_parameter("hand_controller/baudrate").value
 
-        self._hc = HandController(port=port, calibration=False, auto_calibrate= False)
-        self._hc.init_joints(calibrate=False)
-
-        # Flag to indicate if calibration is happening
-        self.calibration_in_progress = False
+        self._hc = OrcaHand(model_path=None)
+        self._hc.connect()
+        self._hc.init_joints()
 
         # Subscribers
         self.joint_angle_sub = self.create_subscription(Float32MultiArray, "/hand/policy_output", self.joint_angle_cb, 10)
 
-        # Services        
-        self.calib_service = self.create_service(Trigger, "/hand/start_auto_calib", self.auto_calib_callback_service)
-        
         # Publishers
         self.curr_pub = self.create_publisher(Float32MultiArray, "/hand/current", 10)
         self.temp_pub = self.create_publisher(Float32MultiArray, "/hand/temperature", 10)
-        self.pos_desired_pub = self.create_publisher(Float32MultiArray, "/hand/pos_des", 10)
+        # self.pos_desired_pub = self.create_publisher(Float32MultiArray, "/hand/pos_des", 10)
         self.pos_read_pub = self.create_publisher(Float32MultiArray, "/hand/pos_read", 10)
 
         # Timer: run at 20 Hz => every 0.05 s
@@ -46,30 +41,14 @@ class HandControllerNode(Node):
         )
         joint_angles = np.array(msg.data)
         joint_angles_deg = joint_angles * 180 / np.pi
-        motor_pos_des = self._hc.write_desired_joint_angles(joint_angles_deg)
-        # self.get_logger().info("Thumb angles received: {}".format(joint_angles_deg[1:5]))
+        print(joint_angles_deg[1])
+        self._hc.set_mano_points(joint_angles_deg)
 
-        motor_pos_des_msg = Float32MultiArray()
-        motor_pos_des_msg.data = motor_pos_des.tolist()
-        self.pos_desired_pub.publish(motor_pos_des_msg)
-
-    def auto_calib_callback_service(self, request, response):
-        self.get_logger().info("Auto-calibration requested.")
-        self.calibration_in_progress = True
-
-        self._hc.auto_calibrate_fingers_with_pos()
-
-        self.get_logger().info("Auto-calibration complete.")
-        self.calibration_in_progress = False
-
-        response.success = True
-        response.message = "Calibration complete"
-        return response
 
     def monitor_callback(self):
         """Runs at 20Hz to publish each motor’s current & temperature."""
         # Get current in mA
-        motor_currents = self._hc.get_motor_cur()  # shape: (num_motors,)
+        motor_currents = self._hc.get_motor_current()  # shape: (num_motors,)
 
         # Get temperature in °C as uint8
         motor_temps = self._hc.get_motor_temp()  # shape: (num_motors,)

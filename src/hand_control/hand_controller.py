@@ -1,556 +1,495 @@
-from re import L
-import numpy as np
-import time
-import yaml
 import os
+import time
+from typing import Dict, List, Union
+from collections import deque
 from threading import RLock
-import faive_system.src.hand_control.finger_kinematics as fk
-from faive_system.src.hand_control.dynamixel_client import *
-from calibration import CalibrationClass
+from dynamixel_client import *
+from utils.yaml_utils import *
 
-class MuscleGroup:
+class OrcaHand:
     """
-    An isolated muscle group comprised of joints and tendons, which do not affect the joints and tendons not included in the group.
-    """
-    attributes = ["joint_ids", "joint_roms", "tendon_ids", "motor_ids", "motor_map", "spool_rad"]
-    def __init__(self, name, muscle_group_json: dict):
-        self.name = name
-        for attr_name in MuscleGroup.attributes:
-            setattr(self, attr_name, muscle_group_json[attr_name])
-        print(f"Created muscle group {name} with joint ids {self.joint_ids}, tendon ids {self.tendon_ids}, motor ids {self.motor_ids} and spool_rad {self.spool_rad}")
+    OrcaHand class is used to abtract hardware control the hand of the robot with simple high level control methods in joint space. 
+   """
+    def __init__(self, model_path: str = "models/orcahand_v1"):
+        """
+        Initialize the OrcaHand class.
 
-class HandController(CalibrationClass):
-    """
-    class specialized for Hand Control of the Orca Hand.
-    wraps DynamixelClient to make it easier to access hand-related functions, letting the user think with "tendons" and "joints" instead of "motors"
+        Args:
+            orca_config (str): The path to the orca_config.yaml file, which includes static information like ROMs, motor IDs, etc. 
+        """
+        
+        # Load configurations from the YAML files
+        self.model_path = model_path if model_path is not None else os.path.join(os.path.dirname(__file__), 'models', 'orcahand_v1')
+        self.config_path = os.path.join(self.model_path, "config.yaml")
+        self.urdf_path = os.path.join(self.model_path, "orcahand.urdf")
+        self.mjco_path = os.path.join(self.model_path, "orcahand.xml")
+        self.calib_path = os.path.join(self.model_path, "calibration.yaml")
+        
+        config = read_yaml(self.config_path)
+        calib = read_yaml(self.calib_path)
+            
+        self.baudrate: int = config.get('baudrate', 3000000)
+        self.port: str = config.get('port', '/dev/ttyUSB0')
+        self.max_current: int = config.get('max_current', 300)
+        self.control_mode: str = config.get('control_mode', 'current_based_position')
+        
+        self.calib_current: str = config.get('calib_current', 200)
+        self.calib_step_size: float = config.get('calib_step_size', 0.1)
+        self.calib_step_period: float = config.get('calib_step_period', 0.01)
+        self.calib_threshold: float = config.get('calib_threshold', 0.01)
+        self.calib_num_stable: int = config.get('calib_num_stable', 20)
+        self.calib_sequence: Dict[str, Dict[str, str]] = config.get('calib_sequence', [])
+        self.is_calibrated: bool = calib.get('calibrated', False)
+        self.motor_limits: Dict[int, List[float]] = calib.get('motor_limits', {})
+        self.joint_to_motor_ratios: Dict[int, float] = calib.get('joint_to_motor_ratios', {})
+        
+        self.motor_ids: List[int] = config.get('motor_ids', [])
+        self.joint_ids: List[str] = config.get('joint_ids', [])
+        self.joint_to_motor_map: Dict[str, int] = config.get('joint_to_motor_map', {})
+        self.motor_to_joint_map: Dict[int, str] = {v: k for k, v in self.joint_to_motor_map.items()}
+        self.joint_roms: Dict[str, List[float]] = config.get('joint_roms', {})
+               
+        self._dxl_client: DynamixelClient = None
+        self._motor_lock: RLock = RLock()
+        
+        self._sanity_check()       
+        
+    def __del__(self):
+        """
+        Destructor to disconnect from the hand.
+        """
+        self.disconnect()
+        
+    def connect(self) -> tuple[bool, str]:
+        """
+        Connect to the hand with the DynamixelClient.
+        Returns:
+            tuple[bool, str]: (Success status, message).
+        """
+        try:
+            self._dxl_client = DynamixelClient(self.motor_ids, self.port, self.baudrate)
+            with self._motor_lock:
+                self._dxl_client.connect()
+            return True, "Connection successful"
+        except Exception as e:
+            self._dxl_client = None
+            return False, f"Connection failed: {str(e)}"
+        
+    def disconnect(self) -> tuple[bool, str]:
+        """
+        Disconnect from the hand.
+        Returns:
+            tuple[bool, str]: (Success status, message).
+        """
+        try:
+            with self._motor_lock:
+                self.disable_torque()
+                time.sleep(0.1)
+                self._dxl_client.disconnect()
+            return True, "Disconnected successfully"
+        except Exception as e:
+            return False, f"Disconnection failed: {str(e)}"
+        
+    def enable_torque(self, motor_ids: List[int] = None):
+        """
+        Enable torque for the motors.
+        
+        Parameters:
+        - motor_ids (list): List of motor IDs to enable the torque. If None, all motors will be
+        enabled
+        """
+        if motor_ids is None:
+            motor_ids = self.motor_ids
+        with self._motor_lock:
+            self._dxl_client.set_torque_enabled(motor_ids, True)        
+
+    def disable_torque(self, motor_ids: List[int] = None):
+        """
+        Disable torque for the motors.
+        
+        Parameters:
+        - motor_ids (list): List of motor IDs to disable the torque. If None, all motors will be disabled.
+        """
+        if motor_ids is None:
+            motor_ids = self.motor_ids
+        with self._motor_lock:
+            self._dxl_client.set_torque_enabled(motor_ids, False)
     
-    ## about tendon direction
-    Signs for the tendon length is modified before sending to the robot so for the user, it is always [positive] = [actual tendon length increases]
-    The direction of each tendon is set by the sign of the `spool_rad` variable in each muscle group
-    """
-
-    def __init__(self, port: str = '/dev/ttyUSB0', config_yml: str = "hand_defs.yaml", calibration: bool = False, auto_calibrate: bool = False, maxCurrent: int = 150, lock_motors: bool = False):
+    def set_max_current(self, current: Union[float, List[float]]):
         """
-        config_yml: path to the config file, relative to this source file
+        Set the maximum current for the motors.
+        
+        Parameters:
+        - current (int) or (list): If list, it should be the maximum current for each motor, otherwise it will be the same for all motors.
+        """
+        if isinstance(current, list):
+            if len(current) != len(self.motor_ids):
+                raise ValueError("Number of currents do not match the number of motors.")
+            with self._motor_lock:
+                self._dxl_client.write_desired_current(self.motor_ids, current)
+        else:
+            with self._motor_lock:
+                self._dxl_client.write_desired_current(self.motor_ids, current*np.ones(len(self.motor_ids)))
+        
+    def set_control_mode(self, mode: str, motor_ids: List[int] = None):
+        """
+        Set the control mode for the motors.
+        
+        Parameters:
+        - mode (str): Control mode.
+            current: Current control mode (0)
+            velocity: Velocity control mode (1)
+            position: Position control mode (3)
+            multi_turn_position: Multi-turn position control mode (4)
+            current_based_position: Current-based position control mode (5)
+        - motor_ids (list): List of motor IDs to set the control mode. If None, all motors will be set.
         """
         
-        ### All configurations are here ### 
-
-        maxCurrent = 400
-        calibration_current = 350
-        
-        baudrate = 3000000
-
-        # Mapping of joint names to their index ranges from the joint_angles array
-        self.mano_joint_mapping = {
-            "wrist": slice(0, 1),   # 0 --> wrist pitch
-            "thumb": slice(1, 5),   # 1,2,3,4 --> thumb [MCP,ABD,PIP,DIP] 
-            "index": slice(5, 8),   # 5,6,7 --> [ABD,MCP,PIP]
-            "middle": slice(8, 11), # 8,9,10 
-            "ring": slice(11, 14),  # 11,12,13 
-            "pinky": slice(14, 17), # 14,15,16    
+        mode_map = {
+            'current': 0,
+            'velocity': 1,
+            'position': 3,
+            'multi_turn_position': 4,
+            'current_based_position': 5
         }
 
-        self.motor_lock = RLock() # lock to read / write motor information
-
-        self._load_musclegroup_yaml(os.path.join(os.path.dirname(os.path.abspath(__file__)), config_yml))
+        mode = mode_map.get(mode)
+        if mode is None:
+            raise ValueError("Invalid control mode.")
         
-        self.command_lock = RLock() # lock to receive and read angle commands
-        self._cmd_joint_angles = np.zeros(self.joint_nr)
-
-        # initialize and connect dynamixels
-        # self._dxc = DummyDynamixelClient(self.motor_ids, port, baudrate)
-        self._dxc = DynamixelClient(self.motor_ids, port, baudrate)
-
-        self.connect_to_dynamixels()
-
-        self.motor_ids_dict = self.get_motor_id_dict() 
-        
-        self.mano_joints_rom_list = self.get_mano_joints_rom_list()
-        
-        # self.mano_motor_directions = self.get_mano_motor_directions()
-        
-
-        # If we have auto_calibrate no manual calibration is needed
-        # Map Mano indexes to the corresponding motor_ids index
-        self.mano_to_motor_ids_mapping = self.get_mano_to_motor_ids_mapping()
-        
-        if not lock_motors:
-            if auto_calibrate:
-                calibration = False
-                self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
+        with self._motor_lock:
+            if motor_ids is None:
+                motor_ids = self.motor_ids
             else:
-                self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
-                self.init_joints(calibrate=calibration, auto_calibrate=auto_calibrate, calib_current=calibration_current, maxCurrent=maxCurrent)
-
-
-    def terminate(self):
-        '''
-        disable torque and disconnect from dynamixels
-        '''
-        self.disable_torque()
-        time.sleep(0.1) # wait for disabling torque
-        self.disconnect_from_dynamixels()
-        
-
-    def _load_musclegroup_yaml(self, filename):
+                if not all(motor_id in self.motor_ids for motor_id in motor_ids):
+                    raise ValueError("Invalid motor IDs.")
+            self._dxl_client.set_operating_mode(motor_ids, mode)
+            
+    def get_motor_pos(self) -> np.ndarray:
         """
-        load muscle group definitions from a yaml file
-        Assumed to only run once, i.e. muscle groups are not changed during runtime
-        """
-        with open(filename, 'r') as f:
-            print(f"reading muscle group definitions from {filename} ...")
-            data = yaml.load(f, Loader=yaml.FullLoader)
-
-        self.muscle_groups = []
-        for muscle_group_name, muscle_group_data in data['muscle_groups'].items():
-            self.muscle_groups.append(MuscleGroup(muscle_group_name, muscle_group_data))
+        Get the current motor positions in radians (Note that this includes offsets of the motors).
         
-        # define some useful variables to make it easier to access tendon information
-        attrs_to_get = ["joint_ids", "joint_roms", "motor_ids", "tendon_ids", "spool_rad"]
-        for attr in attrs_to_get:
-            setattr(self, attr, [])
-            for muscle_group in self.muscle_groups:
-                getattr(self, attr).extend(getattr(muscle_group, attr))
-        for attr in attrs_to_get:
-            setattr(self, attr, np.array(getattr(self, attr)))
+        Returns:
+            np.ndarray: Motor positions.
+        """
+        with self._motor_lock:
+            motor_pos = self._dxl_client.read_pos_vel_cur()[0]
+            return motor_pos
+        
+    def get_motor_current(self) -> np.ndarray:
+        with self._motor_lock:
+            return self._dxl_client.read_pos_vel_cur()[2]
+        
+    def get_motor_temp(self) -> np.ndarray:
+        with self._motor_lock:
+            return self._dxl_client.read_temperature()
 
-        self.joint_nr = 0
-        # run some sanity checks
-        for muscle_group in self.muscle_groups:
-            self.joint_nr += len(muscle_group.joint_ids)
-            assert len(muscle_group.tendon_ids) == len(muscle_group.spool_rad), "spool_rad must be defined for all tendons"
-            assert len(muscle_group.motor_map) == len(muscle_group.tendon_ids), "motor_map must be defined for all tendons"
-        assert len(self.motor_ids) == len(set(self.motor_ids)), "duplicate tendon ids should not exist"
+    def get_joint_pos(self) -> dict:
+        """
+        Get the current joint positions.
+        Returns:
+            dict: {joint_name: position}
+        """
+        motor_pos = self.get_motor_pos()
+        joint_pos = self._motor_to_joint_pos(motor_pos)
+        return joint_pos
+         
+    def set_joint_pos(self, joint_pos: dict):
+        """
+        Set the desired joint positions.
+        
+        Parameters:
+        - joint_pos (dict): {joint_name: desired_position}
+        """
+        if not isinstance(joint_pos, dict):
+            raise ValueError("joint_pos must be a dict.")
+        motor_pos = self._joint_to_motor_pos(joint_pos)
+        self._set_motor_pos(motor_pos)
+        
+    def init_joints(self, calibrate: bool = False
+                    ):
+        """
+        Initialize the joints, enables torque, sets the control mode and sets to the zero position.
+        If the hand is not calibrated, it will calibrate the hand. 
+        
+        Parameters:
+        - calibrate (bool): If True, the hand will be calibrated
+        
+        """
+        self.enable_torque()
+        self.set_control_mode(self.control_mode)
+        self.set_max_current(self.max_current)
 
-    def tendon_pos2motor_pos(self, tendon_lengths):
-        """ Input: desired tendon lengths
-        Output: desired motor positions """
-        # Tendon lengths are more than the motor positions
-        # we skip every other tendon length (depending on motor_map) as moving the one will automatically set the other
-        # so doesn't make sense to calculate the motor position from the tendon length again.
-        motor_pos = np.zeros(len(self.motor_ids))
-        m_idx = 0
-        t_idx = 0
-        for muscle_group in self.muscle_groups:
-            m_nr = len(muscle_group.motor_ids)
-            t_nr = len(muscle_group.tendon_ids)
-            for m_i in range(m_nr):
-                m_id = muscle_group.motor_ids[m_i]
-                t_i = muscle_group.motor_map.index(m_id) # .index() returns the value of the first occurence in the list
-                motor_pos[m_idx + m_i] = tendon_lengths[t_idx+t_i]/muscle_group.spool_rad[t_i]
-            m_idx += m_nr
-            t_idx += t_nr
+        
+        if not self.is_calibrated or calibrate:
+            self.calibrate()
+   
+        self.set_joint_pos({joint: 0 for joint in self.joint_ids})
+                             
+    def calibrate(self):
+        """
+        Calibrate the hand by moving the joints to their limits and setting the ROMs. The proecess is hardware independent and is defined in the config.yaml file.
+        By increasing the motor position, the motor will turn counter-clockwise, flexing the joint.
+        """        
+        # Store the min and max values for each motor
+        motor_limits = {motor_id: [None, None] for motor_id in self.motor_ids}
+
+        # Set calibration control mode
+        self.set_control_mode('current_based_position')
+        self.set_max_current(self.calib_current)
+        self.enable_torque()
+        
+        for step in self.calib_sequence:
+            desired_increment, motor_reached_limit, directions, position_buffers, motor_reached_limit, calibrated_joints, position_logs, current_log = {}, {}, {}, {}, {}, {}, {}, {}
+            
+            for joint, direction in step["joints"].items():          
+                motor_id = self.joint_to_motor_map[joint]
+                directions[motor_id] = 1 if direction == 'flex' else -1
+                position_buffers[motor_id] = deque(maxlen=self.calib_num_stable)
+                position_logs[motor_id] = []
+                current_log[motor_id] = []
+                motor_reached_limit[motor_id] = False
+            
+            while(not all(motor_reached_limit.values())):
+                prev_pos = self.get_motor_pos()
+                
+                for motor_id, reached_limit in motor_reached_limit.items():
+                    if not reached_limit:
+                        desired_increment[motor_id] = directions[motor_id] * self.calib_step_size
+
+                self._set_motor_pos(desired_increment, rel_to_current=True)
+                time.sleep(self.calib_step_period)
+                curr_pos = self.get_motor_pos()
+                
+                for motor_id in desired_increment.keys():
+                    if not motor_reached_limit[motor_id]:
+                        position_buffers[motor_id].append(curr_pos[motor_id - 1])
+                        position_logs[motor_id].append(float(curr_pos[motor_id - 1]))
+                        current_log[motor_id].append(float(self.get_motor_current()[motor_id - 1]))
+
+                        # Check if buffer is full and all values are close
+                        if len(position_buffers[motor_id]) == self.calib_num_stable and np.allclose(position_buffers[motor_id], position_buffers[motor_id][0], atol=self.calib_threshold):
+                            motor_reached_limit[motor_id] = True
+                            avg_limit = float(np.mean(position_buffers[motor_id]))
+                            # print(f"Motor {motor_id} corresponding to joint {self.motor_to_joint_map[motor_id]} reached the limit at {avg_limit} rad.")
+                            if directions[motor_id] == 1:
+                                motor_limits[motor_id][1] = avg_limit
+                            if directions[motor_id] == -1:
+                                motor_limits[motor_id][0] = avg_limit
+                
+            # find ratios of all motors that have been calibrated
+            for motor_id, limits in motor_limits.items():
+                if limits[0] is None or limits[1] is None:
+                    continue
+                delta_motor = limits[1] - limits[0]
+                delta_joint = self.joint_roms[self.motor_to_joint_map[motor_id]][1] - self.joint_roms[self.motor_to_joint_map[motor_id]][0]
+                self.joint_to_motor_ratios[motor_id] = float(delta_motor / delta_joint) 
+                
+                # Zero all joints that have been calibrated during this step
+                calibrated_joints[self.motor_to_joint_map[motor_id]] = 0
+            
+            # save the position logs in a separate file
+            # update_yaml(self.calib_path, 'position_logs', position_logs)
+            # update_yaml(self.calib_path, 'current_logs', current_log)
+            
+            update_yaml(self.calib_path, 'joint_to_motor_ratios', self.joint_to_motor_ratios)
+            update_yaml(self.calib_path, 'motor_limits', motor_limits)
+            self.motor_limits = motor_limits
+            self.set_joint_pos(calibrated_joints)
+            
+            time.sleep(1)    
+            
+        # Store the calibration results
+     
+        
+        update_yaml(self.calib_path, 'calibrated', True)
+        self.is_calibrated = True
+        
+        
+        self.set_joint_pos(calibrated_joints)
+        
+        self.set_max_current(self.max_current)
+       
+    def _set_motor_pos(self, desired_pos: Union[dict, np.ndarray, list], rel_to_current: bool = False):
+        """
+        Set the desired motor positions in radians.
+        
+        Parameters:
+        - desired_pos (dict or np.ndarray or list): Desired motor positions. If dict, it should be {motor_id: desired_position} and it can be partial. If np.ndarray or list, it should be the desired positions for all motors in the order of motor_ids.
+        - rel_to_current (bool): If True, the desired position is relative to the current position.
+        """
+        with self._motor_lock:
+            current_pos = self.get_motor_pos()
+
+            if isinstance(desired_pos, dict):
+                motor_pos_array = np.array([
+                    desired_pos.get(motor_id, 0 if rel_to_current else current_pos[motor_id - 1]) for motor_id in self.motor_ids
+                ])
+            elif isinstance(desired_pos, np.ndarray):
+                assert len(desired_pos) == len(self.motor_ids), "Number of motor positions do not match the number of motors."
+                motor_pos_array = desired_pos.copy()
+            elif isinstance(desired_pos, list):
+                assert len(desired_pos) == len(self.motor_ids), "Number of motor positions do not match the number of motors."
+                motor_pos_array = np.array(desired_pos)
+            else:
+                raise ValueError("desired_pos must be a dict or np.ndarray or list")
+
+            if rel_to_current:
+                motor_pos_array += current_pos
+
+            self._dxl_client.write_desired_pos(self.motor_ids, motor_pos_array)
+    
+    def _motor_to_joint_pos(self, motor_pos: np.ndarray) -> dict:
+        """
+        Convert motor positions into joint positions.
+        
+        Parameters:
+        - motor_pos (np.ndarray): Motor positions.
+        
+        Returns:
+        - dict: {joint_name: position}
+        """          
+        joint_pos = {}
+        for motor_id, pos in enumerate(motor_pos, start=1):
+            joint_name = self.motor_to_joint_map.get(motor_id)
+            if joint_name is None:
+                continue
+            joint_pos[joint_name] = self.joint_roms[joint_name][0] + (pos - self.motor_limits[motor_id][0]) / self.joint_to_motor_ratios[motor_id]
+        return joint_pos
+    
+    def _joint_to_motor_pos(self, joint_pos: dict) -> np.ndarray:
+        """
+        Convert desired joint positions into motor commands.
+    
+        Parameters:
+        - joint_pos (dict): {joint_name: desired_position}
+        """
+        motor_pos = self.get_motor_pos()
+        
+        for joint_name, pos in joint_pos.items():
+            motor_id = self.joint_to_motor_map.get(joint_name)
+            if motor_id is None:
+                continue
+            if self.motor_limits[motor_id][0] is None or self.motor_limits[motor_id][1] is None:
+                raise ValueError(f"Motor {motor_id} corresponding to joint {joint_name} is not calibrated.")
+            motor_pos[motor_id - 1] = self.motor_limits[motor_id][0] + (pos - self.joint_roms[joint_name][0]) * self.joint_to_motor_ratios[motor_id]
+            
+            # print(f"Joint {joint_name} set to {pos} deg. Motor limit: {self.motor_limits[motor_id]} rad. Motor pos: {motor_pos[motor_id - 1]} rad and ratio {self.joint_to_motor_ratios[motor_id]}")
+            
         return motor_pos
 
-    def motor_pos2tendon_pos(self, motor_pos):
-        """ Input: motor positions
-        Output: tendon lengths """        
-        tendon_lengths = np.zeros(len(self.tendon_ids))
-        m_idx = 0
-        t_idx = 0
-        for muscle_group in self.muscle_groups:
-            m_nr = len(muscle_group.motor_ids)
-            t_nr = len(muscle_group.tendon_ids)
-            for m_i in range(m_nr):
-                m_id = muscle_group.motor_ids[m_i]
-                t_i = np.where(np.array(muscle_group.motor_map) == m_id)[0] # Get both index responding to that motor_id
-                for i in t_i:
-                    tendon_lengths[t_idx+i] = motor_pos[m_idx+m_i]*muscle_group.spool_rad[i]
-            m_idx += m_nr
-            t_idx += t_nr
-        return tendon_lengths
 
-    def write_desired_motor_pos(self, motor_positions_rad):
+    def set_mano_points(self, mano_points: List[float]) -> np.ndarray:
         """
-        send position command to the motors
-        unit is rad, angle of the motor connected to tendon
+        Convert a list of MANO points to joint angles and then map to motor positions.
+        
+        The expected order of mano_points is:
+          - Index 0: wrist
+          - Indices 1-4: thumb [MCP, ABD, PIP, DIP]
+          - Indices 5-7: index finger [ABD, MCP, PIP]
+          - Indices 8-10: middle finger [ABD, MCP, PIP]
+          - Indices 11-13: ring finger [ABD, MCP, PIP]
+          - Indices 14-16: pinky finger [ABD, MCP, PIP]
+        
+        The joint angles are assumed to be in degrees.
+        
+        Args:
+            mano_points (List[float]): List of 17 float values representing joint angles.
+        
+        Returns:
+            np.ndarray: Motor positions in radians computed from the given MANO points.
         """
-        with self.motor_lock:
-            self._dxc.write_desired_pos(self.motor_ids, motor_positions_rad)
-
-    def write_desired_motor_current(self, motor_currents_mA):
-        """
-        send current command to the motors
-        unit is mA (positive = pull the tendon)
-        """
-        m_nr = len(motor_currents_mA)
-        m_idx = 0
-        directions = np.zeros(m_nr)
-        for muscle_group in self.muscle_groups:
-            for m_id in muscle_group.motor_ids:
-                idx = muscle_group.motor_map.index(m_id)
-                directions[m_idx] = np.sign(muscle_group.spool_rad[idx])
-                m_idx += 1
-        with self.motor_lock:
-            self._dxc.write_desired_current(self.motor_ids, - motor_currents_mA * directions)
-
-    # def get_mano_motor_directions(self):
-    #     """
-    #     Get the ROM (Range of Motion) for each muscle group.
-    #     :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
-    #     """
-    #     directions_list = [0 for _ in range(17)]
-    #     for muscle_group in self.muscle_groups:
-    #         joint_indices = self.mano_joint_mapping[muscle_group.name]
-
-    #         spool_rad_list = muscle_group.spool_rad
-
-    #         # idx is for geting the values from the muscle_roms which start from 0
-    #         # joint_idx is for setting the values in the joints_rom_list which depends on the joint 
-    #         for idx, joint_idx in enumerate(range(joint_indices.start,joint_indices.stop)):
-    #             directions_list[joint_idx] = np.sign(spool_rad_list[idx*2])
-
-    #     return directions_list
-
-    def connect_to_dynamixels(self):
-        with self.motor_lock:
-            self._dxc.connect()
-
-    def disconnect_from_dynamixels(self):
-        with self.motor_lock:
-            self._dxc.disconnect()
+        if len(mano_points) != 17:
+            raise ValueError(f"Expected 17 MANO points, got {len(mano_points)}")
+        
+        # Define the mapping from MANO point index to joint name
+        mano_to_joint = {
+            0: "wrist",
+            1: "thumb_mcp",
+            2: "thumb_abd",
+            3: "thumb_pip",
+            4: "thumb_dip",
+            5: "index_abd",
+            6: "index_mcp",
+            7: "index_pip",
+            8: "middle_abd",
+            9: "middle_mcp",
+            10: "middle_pip",
+            11: "ring_abd",
+            12: "ring_mcp",
+            13: "ring_pip",
+            14: "pinky_abd",
+            15: "pinky_mcp",
+            16: "pinky_pip"
+        }
+        
+        joint_pos = {}
+        for idx, angle in enumerate(mano_points):
+            joint_name = mano_to_joint[idx]
+            if joint_name in ['wrist', 'thumb_mcp', 'thumb_abd']:
+                angle = -angle
+            joint_pos[joint_name] = angle
+        print(joint_pos["thumb_mcp"])
+        self.set_joint_pos(joint_pos)
     
-    def set_operating_mode(self, mode):
+    def _sanity_check(self):
         """
-        see dynamixel_client.py for the meaning of the mode
+        Check if the configuration is correct and the IDs are consistent.
         """
-        with self.motor_lock:
-            self._dxc.set_operating_mode(self.motor_ids, mode)
-
-    def set_operating_mode_for_motors(self, motor_ids, mode):
-        """
-        Set the operating mode for specific motors.
-        :param motor_ids: List of motor IDs to set the mode for.
-        :param mode: The operating mode to set.
-        """
-        with self.motor_lock:
-            self._dxc.set_operating_mode(motor_ids, mode)
-
-    def get_motor_pos(self):
-        with self.motor_lock:
-            return self._dxc.read_pos_vel_cur()[0]
-
-    def get_motor_cur(self):
-        with self.motor_lock:
-            return self._dxc.read_pos_vel_cur()[2]
-
-    def get_motor_vel(self):
-        with self.motor_lock:
-            return self._dxc.read_pos_vel_cur()[1]
-
-    def get_motor_temp(self):
-        with self.motor_lock:
-            return self._dxc.read_temperature() #[0]
-
-    def wait_for_motion(self):
-        while not all(self._dxc.read_status_is_done_moving()):
-            time.sleep(0.01)
-
-    def enable_torque(self, motor_ids=None):
-        if motor_ids is None:
-            motor_ids = self.motor_ids
-        with self.motor_lock:
-            self._dxc.set_torque_enabled(motor_ids, True)        
-
-    def disable_torque(self, motor_ids=None):
-        if motor_ids is None:
-            motor_ids = self.motor_ids
-        with self.motor_lock:
-            self._dxc.set_torque_enabled(motor_ids, False)
-
-    def pose2motors(self, joint_angles):
-        """ Input: joint angles in rad
-        Output: motor positions 
-        """
-        # return 
-        tendon_lengths = np.zeros(len(self.tendon_ids))
-        tendon_id_ranges_dict = self.get_tendon_id_ranges()
-        for muscle_group in self.muscle_groups:
-            t_s, t_e = tendon_id_ranges_dict[muscle_group.name]
+        if len(self.motor_ids) != len(self.joint_ids):
+            raise ValueError("Number of motor IDs and joints do not match.")
+        
+        if len(self.motor_ids) != len(self.joint_to_motor_map):
+            raise ValueError("Number of motor IDs and joints do not match.")
+        
+        if self.control_mode not in ['current_position', 'current_velocity', 'position', 'multi_turn_position', 'current_based_position']:
+            raise ValueError("Invalid control mode.")
+        
+        if self.max_current < self.calib_current:
+            raise ValueError("Max current should be greater than the calibration current.")
                 
-            joint_indices = self.mano_joint_mapping[muscle_group.name]
-            # Extract and return the angles for the specified joint
-            joint_angles_of_muscle_group = joint_angles[joint_indices]
+        for joint, motor_id in self.joint_to_motor_map.items():
+            if joint not in self.joint_ids:
+                raise ValueError(f"Joint {joint} is not defined.")
+            if joint not in self.joint_roms:
+                raise ValueError(f"ROM for joint {joint} is not defined.")
+            if motor_id not in self.motor_ids:
+                raise ValueError(f"Motor ID {motor_id} is not in the motor IDs list.")
+            
+        for joint, rom in self.joint_roms.items():
+            if rom[1] - rom[0] <= 0:
+                raise ValueError(f"ROM for joint {joint} is not valid.")
+            if joint not in self.joint_ids:
+                raise ValueError(f"Joint {joint} in ROMs is not defined.")
+            
+        for step in self.calib_sequence:
+            for joint, direction in step["joints"].items():
+                if joint not in self.joint_ids:
+                    raise ValueError(f"Joint {joint} is not defined.")
+                if direction not in ['flex', 'extend']:
+                    raise ValueError(f"Invalid direction for joint {joint}.")
+                
+if __name__ == "__main__":
+    # Example usage:
+    hand = OrcaHand(model_path=None)
+    print(hand.model_path)#
+    print(hand.config_path)
+    status = hand.connect()
+    print(status)
+    if not status[0]:
+        print(status[1])
+        exit()
+    hand.enable_torque()
+    hand.calibrate()
 
-            if muscle_group.name == "wrist":
-                tendon_lengths[t_s:t_e+1] = fk.pose2wrist(*joint_angles_of_muscle_group)
-            else:
-                tendon_lengths[t_s:t_e+1] = fk.pose2tendon_length(muscle_group.name, *joint_angles_of_muscle_group)
-        return self.tendon_pos2motor_pos(tendon_lengths)
-
-    def get_tendon_id_ranges(self):
-        """
-        Create a dictionary with the starting tendon id and last tendon id of each muscle group.
-        :return: Dictionary with muscle group names as keys and tuples (start_tendon_idx, end_tendon_idx) as values.
-        """
-        tendon_id_ranges = {}
-        for muscle_group in self.muscle_groups:
-            start_tendon_idx = muscle_group.tendon_ids[0]-1
-            end_tendon_idx = muscle_group.tendon_ids[-1]-1
-            tendon_id_ranges[muscle_group.name] = (start_tendon_idx, end_tendon_idx)
-        return tendon_id_ranges
+    # Set the desired joint positions to 0
+    hand.set_joint_pos({joint: 0 for joint in hand.joint_ids})
+    hand.disable_torque()
+    hand.disconnect()
     
     
-    def get_motor_id_dict(self):
-        """
-        Create a dictionary with the motor ids for each muscle group.
-        :return: Dictionary with muscle group names as keys and lists of motor ids as values.
-        """
-        motor_id_dict = {}
-        for muscle_group in self.muscle_groups:
-            motor_id_dict[muscle_group.name] = muscle_group.motor_ids
-        return motor_id_dict
-
-    def init_joints(self, calibrate: bool = False, auto_calibrate: bool = False, calib_current: int = 70, maxCurrent: int = 150):
-        """
-        Set the offsets based on the current (initial) motor positions
-        :param calibrate: if True, perform calibration and set the offsets else move to the initial position
-        """
-        self.motor_pos_norm = np.zeros(len(self.joint_ids))
+    
+    
         
-        # Find calibration file
-        cal_yaml_fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cal.yaml")
-        cal_exists = os.path.isfile(cal_yaml_fname)
-
-        if not auto_calibrate and not calibrate and cal_exists:
-            # Load the calibration file
-            with open(cal_yaml_fname, 'r') as cal_file:
-                cal_data = yaml.load(cal_file, Loader=yaml.FullLoader)
-            self.motor_id2init_pos = np.array(cal_data["motor_init_pos"])
-
-             # Set to current based position control mode
-            self.set_operating_mode(5)
-            self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
-            # This is in order to grecefully reached the desired position when starting the hand
-            joint_angles = np.zeros(len(self.motor_ids)) 
-            self.write_desired_joint_angles(joint_angles, calibrate=True)
-            # self.write_desired_motor_pos(self.motor_id2init_pos)
-            time.sleep(0.1)   
-
-        else: # This will overwrite the current config file with the new offsets and we will lose all comments in the file
-            if auto_calibrate:
-                self.auto_calibrate_fingers_with_pos(calib_current, maxCurrent) # Demo script for calibrating based on hardstops of design
-
-                # Load the calibration file that have just been written by the previous function
-                
-                # with open(cal_yaml_fname, 'r') as cal_file:
-                #     cal_data = yaml.load(cal_file, Loader=yaml.FullLoader)
-
-                # self.motor_id2init_pos = np.array(cal_data["motor_init_pos"])
-                
-                # This is called now that the self calibration has been done.
-                # It can be called after the init_joints function
-                # self.mano_joints2spools_ratio = self.get_joints2spool_ratio()
-                
-                # Write zero angles for all joints 
-                # joint_angles = np.zeros(len(self.motor_ids)) 
-                # self.write_desired_joint_angles(joint_angles, calibrate=True)
-            else:
-                # Manual calibration code
-                # Disable torque to allow the motors to move freely
-                self.disable_torque()
-                input("Move fingers to init position and press Enter to continue...")
-                
-                # Set to current based position control mode
-                self.set_operating_mode(5)
-                self.write_desired_motor_current(maxCurrent * np.ones(len(self.motor_ids)))
-                time.sleep(0.2)
-                self.update_motorinitpos()
-
-
-        #TODO: Maybe this need to change based on ratio kinematics model. Run and see what this norm value is. IF zero then just delete it.
-        # self.motor_pos_norm = self.pose2motors(np.zeros(len(self.joint_ids)))
-
-
-    def update_motorinitpos(self, motor_init_pos=None):
-        """
-        Updates the initial motor positions based on the current position
-        """
-        cal_yaml_fname = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "cal.yaml"
-        )
-
-        # Get current motor positions or the ones passed to the function
-        if motor_init_pos is None:
-            self.motor_init_pos = self.get_motor_pos()
-            print(f"Setting current motor position as motor_init_pos: {self.motor_init_pos}")
-        else:
-            self.motor_init_pos = motor_init_pos
-            print(f"Setting given motor positions as motor_init_pos: {self.motor_init_pos}")
-
-        # Save the offsets to a YAML file
-        cal_data = {}
-        cal_data["motor_init_pos"] = self.motor_init_pos.tolist()
-        with open(cal_yaml_fname, "w") as cal_file:
-            yaml.dump(cal_data, cal_file, default_flow_style=False)
-
-    def write_desired_joint_angles(self, joint_angles: np.array, calibrate: bool = False):
-        """
-        Command joint angles in deg
-        :param: joint_angles: [joint 1 angle, joint 2 angle, ...]
-
-        """
-
-        # if calibrate:
-        #     joint_angles = np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.])
-            
-            # joint_angles[1] = 30  
-            # joint_angles[2] = 20
-            # joint_angles[3] = 45
-            # joint_angles[4] = 45
-            
-            
-            # joint_angles[5]  = -20
-            # joint_angles[6]  = 90
-            # joint_angles[7]  = 45
-
-            # joint_angles[8]  = -20
-            # joint_angles[9]  = 90
-            # joint_angles[10]  = 45
-            
-            # joint_angles[11] = -20
-            # joint_angles[12] = 90
-            # joint_angles[13] = 45
-            
-            # joint_angles[14] = -20
-            # joint_angles[15] = 90
-            # joint_angles[16] = 45
-        
-
-        # joint_angles[1]  *= -1
-
-        joint_angles[5]  *= -1
-        joint_angles[8]  *= -1
-        joint_angles[11]  *= -1
-        joint_angles[14]  *= -1
-
-        joint_angles_clipped = self.clip_joint_angles(joint_angles)
-
-        joint_angles_normalized = joint_angles_clipped - [low for low,_ in self.mano_joints_rom_list]
-        
-        motor_anlges_from_ratio = joint_angles_normalized * self.mano_joints2spools_ratio
-        
-        motor_pos_mapped = np.zeros(len(self.motor_ids))
-        for i,idx in enumerate(self.mano_to_motor_ids_mapping): # From Mano angles to motor angles
-            motor_pos_mapped[idx] = motor_anlges_from_ratio[i]
-
-        # # Abduction of Index and Middle finger are mapped in reverse order
-        motor_pos_mapped[0] *=-1 # 
-        motor_pos_mapped[1] *=-1 # Thumb ABD
-        
-
-        motor_pos_mapped[4] *=-1 # Index ABD
-        motor_pos_mapped[7] *=-1 # Middle ABD
-        motor_pos_mapped[10] *=-1 # Ring ABD
-        motor_pos_mapped[13] *=-1 # Pinky ABD
-        motor_pos_mapped[-1] *=-1 # Wrist
-        
-        motor_pos_des = np.deg2rad(motor_pos_mapped) - self.motor_pos_norm + self.motor_id2init_pos
-        
-        if calibrate:
-            # Move like this because the movement is big and joints will move too fast.
-            # Creates overload error or breaks a tendon.
-            self.move_to_desired_positions(motor_pos_des)
-        else:
-            self.write_desired_motor_pos(motor_pos_des)
-        
-        time.sleep(0.005) # wait for the command to be sent
-        return motor_pos_des
-
-
-    def get_mano_to_motor_ids_mapping(self):
-        mano_indexes_list = []
-        motors_ids_idxs_list = []
-        for joint in self.mano_joint_mapping.keys():
-            joint_motor_ids = self.motor_ids_dict[joint]
-            joint_motor_idxs = [self.motor_ids.tolist().index(motor_id) for motor_id in joint_motor_ids]      
-            motors_ids_idxs_list.extend(joint_motor_idxs)
-
-            joints_slice = self.mano_joint_mapping[joint]
-            mano_indexes_list.extend(list(range(joints_slice.start, joints_slice.stop)))
-
-        sorted_indices = sorted(range(len(mano_indexes_list)), key=lambda i: mano_indexes_list[i])
-        mano_indexes_list = [mano_indexes_list[i] for i in sorted_indices]
-        mapping = [motors_ids_idxs_list[i] for i in sorted_indices]
-        return mapping
-
-    def clip_joint_angles(self, joint_angles):
-        """
-        Clip the joint angles based on the ROM specified for each joint.
-        :param joint_angles: Array of joint angles to be clipped.
-        :return: Clipped joint angles.
-        """
-        # Get rom as array of 2 columns, one with min values and one with max values
-        bounds = np.array(self.mano_joints_rom_list)
-
-        # Separate bounds into min and max angle
-        min_angles = bounds[:, 0]
-        max_angle = bounds[:, 1]
-
-        clipped_angles = np.clip(joint_angles, min_angles[:len(joint_angles)], max_angle[:len(joint_angles)])
-        return clipped_angles
-
-    def get_mano_joints_rom_list(self):
-        """
-        Get the ROM (Range of Motion) for each muscle group.
-        :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
-        """
-        joints_rom_list = [(0,0) for _ in range(17)]
-        for muscle_group in self.muscle_groups:
-            joint_indices = self.mano_joint_mapping[muscle_group.name]
-
-            muscle_roms = muscle_group.joint_roms
-
-            # idx is for geting the values from the muscle_roms which start from 0
-            # joint_idx is for setting the values in the joints_rom_list which depends on the joint 
-            for idx, joint_idx in enumerate(range(joint_indices.start,joint_indices.stop)):
-                joints_rom_list[joint_idx] = (muscle_roms[idx][0], muscle_roms[idx][1])
-        
-        return joints_rom_list
-
-    def get_joints2spool_ratio(self):
-        """
-        Get the ROM (Range of Motion) for each muscle group.
-        :return: Dictionary with muscle group names as keys and tuples (lower ROM, upper ROM) as values.
-        """
-        joints_ratio_list = [0 for _ in range(17)]
-        
-        current_path = os.path.abspath(__file__)
-        current_path = os.path.dirname(current_path)
-        file_path = os.path.join(current_path, "calibration_yaml")    
-        calibration_ratios_file_name = self.find_latest_calibration_file(file_path)
-        
-        # Open the YAML file
-        if not os.path.isfile(calibration_ratios_file_name):
-            raise FileNotFoundError(f"Calibration ratios file not found: {calibration_ratios_file_name}. \n Have you run the calibration script?")
-
-        with open(calibration_ratios_file_name, "r") as yaml_file:
-            calibration_defs = yaml.safe_load(yaml_file)
-        
-        for muscle_group in self.muscle_groups:
-            finger_name = muscle_group.name
-            
-            joint_indices = self.mano_joint_mapping[finger_name]
-            
-            joint_names = list(calibration_defs[finger_name].keys())
-
-            # idx is for geting the values from each ABD,MCP,PIP joint which start from 0
-            # joint_idx is for setting the values in the joints_ratio_list which depends on the joint 
-
-            for idx, joint_idx in enumerate(range(joint_indices.start,joint_indices.stop)):
-                joint_type = joint_names[idx]
-                if finger_name == "thumb":
-                    joint_names_thumb = ["MCP","ABD","PIP","DIP"]
-                    joint_type = joint_names_thumb[idx]
-                elif finger_name == "wrist":
-                    joint_type = "PITCH"
-                    
-                joints_ratio_list[joint_idx] = calibration_defs[finger_name][joint_type]["ratio"]
-
-        return joints_ratio_list
-
-
-if __name__ == "__main__" :
-    gc = HandController("/dev/ttyUSB0", calibration= False, auto_calibrate= True)
-    time.sleep(2.0)
+    
+    
