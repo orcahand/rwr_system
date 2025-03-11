@@ -76,23 +76,26 @@ def get_mano_pps_batch(mano_joints_dict):
     }
 
 
-def get_keyvectors(fingertips: Dict[str, torch.Tensor], palm: torch.Tensor):
+def get_keyvectors(fingertips: Dict[str, torch.Tensor], palm: torch.Tensor,
+                   thumb_int1: torch.Tensor = None, thumb_int2: torch.Tensor = None,
+                   tip_weight: float = 0.7, int_weight: float = 0.15):
+    if thumb_int1 is not None and thumb_int2 is not None:
+        # Blend: 70% tip, 15% each intermediate
+        thumb_vector = (tip_weight * fingertips["thumb"] +
+                        int_weight * thumb_int1 +
+                        int_weight * thumb_int2) - palm
+    elif thumb_int1 is not None:
+        # Fallback: blend tip and one intermediate
+        thumb_vector = (tip_weight * fingertips["thumb"] +
+                        (1 - tip_weight) * thumb_int1) - palm
+    else:
+        thumb_vector = fingertips["thumb"] - palm
     return {
-        "palm2thumb": fingertips["thumb"] - palm,
+        "palm2thumb": thumb_vector,
         "palm2index": fingertips["index"] - palm,
         "palm2middle": fingertips["middle"] - palm,
         "palm2ring": fingertips["ring"] - palm,
         "palm2pinky": fingertips["pinky"] - palm,
-        # 'thumb2index': fingertips['index'] - fingertips['thumb'],
-        # 'thumb2middle': fingertips['middle'] - fingertips['thumb'],
-        # 'thumb2ring': fingertips['ring'] - fingertips['thumb'],
-        # 'thumb2pinky': fingertips['pinky'] - fingertips['thumb'],
-        # 'index2middle': fingertips['middle'] - fingertips['index'],
-        # 'index2ring': fingertips['ring'] - fingertips['index'],
-        # 'index2pinky': fingertips['pinky'] - fingertips['index'],
-        # 'middle2ring': fingertips['ring'] - fingertips['middle'],
-        # 'middle2pinky': fingertips['pinky'] - fingertips['middle'],
-        # 'ring2pinky': fingertips['pinky'] - fingertips['ring'],
     }
 
 

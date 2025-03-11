@@ -294,6 +294,13 @@ class Retargeter:
         for finger, finger_joints in list(mano_joints_dict.items())[1:]:
             mano_fingertips[finger] = finger_joints[[-1], :]
 
+        # For thumb, extract both intermediate joints if available
+        thumb_joints = mano_joints_dict["thumb"]  # expected shape (4, 3)
+        thumb_int1, thumb_int2 = None, None
+        if thumb_joints.shape[0] >= 4:
+            thumb_int1 = thumb_joints[1:2, :]  # first intermediate joint
+            # thumb_int2 = thumb_joints[2:3, :]  # second intermediate joint
+
         mano_pps = {}
         for finger, finger_joints in list(mano_joints_dict.items())[1:]:
             mano_pps[finger] = finger_joints[[0], :]
@@ -304,7 +311,20 @@ class Retargeter:
             keepdim=True,
         )
 
-        keyvectors_mano = retarget_utils.get_keyvectors(mano_fingertips, mano_palm)
+        # # After obtaining mano_joints_dict
+        # thumb_joints = mano_joints_dict["thumb"]
+        # thumb_intermediate = None
+        # if thumb_joints.shape[0] >= 3:
+        #     thumb_intermediate = thumb_joints[1:-1].mean(dim=0, keepdim=True)
+
+        # keyvectors_mano = retarget_utils.get_keyvectors(mano_fingertips, mano_palm, thumb_intermediate)
+        keyvectors_mano = retarget_utils.get_keyvectors(
+            mano_fingertips, mano_palm, thumb_int1, thumb_int2, tip_weight=0.7, int_weight=0.15)
+
+        # keyvectors_mano = retarget_utils.get_keyvectors(
+        #     mano_fingertips, mano_palm, thumb_int1, tip_weight=0.7, int_weight=0.3
+        # )
+        # keyvectors_mano = retarget_utils.get_keyvectors(mano_fingertips, mano_palm)
         # norms_mano = {k: torch.norm(v) for k, v in keyvectors_mano.items()}
         # print(f"keyvectors_mano: {norms_mano}")
 

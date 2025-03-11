@@ -41,7 +41,6 @@ class HandControllerNode(Node):
         )
         joint_angles = np.array(msg.data)
         joint_angles_deg = joint_angles * 180 / np.pi
-        print(joint_angles_deg[1])
         self._hc.set_mano_points(joint_angles_deg)
 
 

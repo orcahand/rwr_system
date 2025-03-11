@@ -46,6 +46,14 @@ class OrcaHand:
         self.motor_ids: List[int] = config.get('motor_ids', [])
         self.joint_ids: List[str] = config.get('joint_ids', [])
         self.joint_to_motor_map: Dict[str, int] = config.get('joint_to_motor_map', {})
+        self.joint_inversion = {}  # True if the motor is inverted
+        for joint, motor_id in self.joint_to_motor_map.items():
+            if motor_id < 0:
+                self.joint_inversion[joint] = True
+                self.joint_to_motor_map[joint] = abs(motor_id)
+            else:
+                self.joint_inversion[joint] = False
+
         self.motor_to_joint_map: Dict[int, str] = {v: k for k, v in self.joint_to_motor_map.items()}
         self.joint_roms: Dict[str, List[float]] = config.get('joint_roms', {})
                
@@ -244,7 +252,12 @@ class OrcaHand:
             
             for joint, direction in step["joints"].items():          
                 motor_id = self.joint_to_motor_map[joint]
-                directions[motor_id] = 1 if direction == 'flex' else -1
+                # Determine the intended movement direction (flex is normally +1)
+                sign = 1 if direction == 'flex' else -1
+                # If the joint is inverted, flip the sign.
+                if self.joint_inversion.get(joint, False):
+                    sign = -sign
+                directions[motor_id] = sign
                 position_buffers[motor_id] = deque(maxlen=self.calib_num_stable)
                 position_logs[motor_id] = []
                 current_log[motor_id] = []
@@ -354,7 +367,12 @@ class OrcaHand:
             joint_name = self.motor_to_joint_map.get(motor_id)
             if joint_name is None:
                 continue
-            joint_pos[joint_name] = self.joint_roms[joint_name][0] + (pos - self.motor_limits[motor_id][0]) / self.joint_to_motor_ratios[motor_id]
+            # Normal conversion: lower motor limit corresponds to lower ROM value.
+            # For inverted joints, the lower motor limit corresponds to the higher ROM value.
+            if self.joint_inversion.get(joint_name, False):
+                joint_pos[joint_name] = self.joint_roms[joint_name][1] - (pos - self.motor_limits[motor_id][0]) / self.joint_to_motor_ratios[motor_id]
+            else:
+                joint_pos[joint_name] = self.joint_roms[joint_name][0] + (pos - self.motor_limits[motor_id][0]) / self.joint_to_motor_ratios[motor_id]
         return joint_pos
     
     def _joint_to_motor_pos(self, joint_pos: dict) -> np.ndarray:
@@ -372,10 +390,13 @@ class OrcaHand:
                 continue
             if self.motor_limits[motor_id][0] is None or self.motor_limits[motor_id][1] is None:
                 raise ValueError(f"Motor {motor_id} corresponding to joint {joint_name} is not calibrated.")
-            motor_pos[motor_id - 1] = self.motor_limits[motor_id][0] + (pos - self.joint_roms[joint_name][0]) * self.joint_to_motor_ratios[motor_id]
             
+            if self.joint_inversion.get(joint_name, False):
+                # Inverted: higher ROM value corresponds to lower motor position.
+                motor_pos[motor_id - 1] = self.motor_limits[motor_id][0] + (self.joint_roms[joint_name][1] - pos) * self.joint_to_motor_ratios[motor_id]
+            else:
+                motor_pos[motor_id - 1] = self.motor_limits[motor_id][0] + (pos - self.joint_roms[joint_name][0]) * self.joint_to_motor_ratios[motor_id]            
             # print(f"Joint {joint_name} set to {pos} deg. Motor limit: {self.motor_limits[motor_id]} rad. Motor pos: {motor_pos[motor_id - 1]} rad and ratio {self.joint_to_motor_ratios[motor_id]}")
-            
         return motor_pos
 
 
@@ -426,7 +447,9 @@ class OrcaHand:
         joint_pos = {}
         for idx, angle in enumerate(mano_points):
             joint_name = mano_to_joint[idx]
-            if joint_name in ['wrist', 'thumb_mcp', 'thumb_abd']:
+            if joint_name == 'wrist':
+                angle = 0.0
+            if joint_name in ['thumb_mcp', 'thumb_abd']: # Exceptions due to wrong routing.
                 angle = -angle
             joint_pos[joint_name] = angle
         print(joint_pos["thumb_mcp"])

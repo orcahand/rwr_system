@@ -6,3 +6,7 @@ joint_regularizers:  # tuples (joint_name, zero_value, weight) for regularizing 
   - [middle_abd, 0, 0.000001]
   - [ring_abd, 0, 0.000001]
   - [pinky_abd, 0, 0.000001]
+  # - [thumb_mp2dp, 40, 0.0001]
+  # - [thumb_pp2mp, 40, 0.0001]
+  
+

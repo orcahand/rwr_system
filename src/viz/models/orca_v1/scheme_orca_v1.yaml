@@ -35,9 +35,8 @@ finger_to_base:
 wrist_name: palm
 
 gc_limits_lower : [
-  -60.0,    # tower2root
-  -53.0,  # root2thumb_base
-  -45.0,  # thumb_base2pp
+  -45.0,  # root2thumb_base
+  -65.0,  # thumb_base2pp
   -20.0,  # thumb_pp2mp
   -20.0,  # thumb_mp2dp
   -30.0,  # index_abd
@@ -55,11 +54,10 @@ gc_limits_lower : [
 ]
 
 gc_limits_upper : [
-  60.0,  # tower2root
-  48.0,  # root2thumb_base
-  45.0,  # thumb_base2pp
-  115.0,  # thumb_pp2mp
-  100.0,  # thumb_mp2dp
+  45.0,  # root2thumb_base
+  65.0,  # thumb_base2pp
+  140.0,  # thumb_pp2mp
+  120.0,  # thumb_mp2dp
   30.0,  # index_abd
   110.0,  # root2index_pp
   130.0,  # index_pp2mp
