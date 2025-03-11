@@ -25,15 +25,25 @@ def generate_launch_description():
             #     name="mediapipe_node",
             #     output="log",
             # ),
+            # Node(
+            #     package="ingress",
+            #     executable="rokoko_node.py",
+            #     name="rokoko_node",
+            #     output="screen",
+            #     parameters=[
+            #         {"rokoko_tracker/ip": "0.0.0.0"},
+            #         {"rokoko_tracker/port": 14043},
+            #         {"rokoko_tracker/use_coil": False}
+            #     ],
+            # ),
+            
             Node(
                 package="ingress",
-                executable="rokoko_node.py",
-                name="rokoko_node",
+                executable="vision_pro_node.py",
+                name="vision_pro_node",
                 output="screen",
                 parameters=[
-                    {"rokoko_tracker/ip": "0.0.0.0"},
-                    {"rokoko_tracker/port": 14043},
-                    {"rokoko_tracker/use_coil": False}
+                    {"vision_pro/ip": "10.93.181.127"},
                 ],
             ),
 

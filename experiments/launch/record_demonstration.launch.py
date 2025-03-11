@@ -36,16 +36,13 @@ def generate_launch_description():
             
             # ROKOKO INGRESS NODE
             Node(
-                package="ingress",
-                executable="rokoko_node.py",
-                name="rokoko_node",
-                output="log",
-                parameters=[
-                    {"rokoko_tracker/ip": "0.0.0.0"},
-                    {"rokoko_tracker/port": 14043},
-                    {"rokoko_tracker/use_coil": True}
-                ],
-            ),
+                    package="ingress",
+                    executable="vision_pro_node.py",
+                    name="vision_pro_node",
+                    output="screen"
+                ),
+            
+            
             
             # # SENSING NODE
             # Node(
@@ -61,12 +58,12 @@ def generate_launch_description():
 
 
             # HAND CONTROLLER NODE
-            Node(
-                package="hand_control",
-                executable="hand_control_node.py",
-                name="hand_control_node",
-                output="screen"
-            ),
+            # Node(
+            #     package="hand_control",
+            #     executable="hand_control_node.py",
+            #     name="hand_control_node",
+            #     output="screen"
+            # ),
             
             #RETARGET NODE
             Node(

@@ -63,4 +63,9 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+    vision_pro/vision_pro_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
