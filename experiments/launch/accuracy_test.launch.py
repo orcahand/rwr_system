@@ -2,8 +2,7 @@
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import ExecuteProcess, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import ExecuteProcess, TimerAction
 import os
 from ament_index_python.packages import get_package_share_directory
 from datetime import datetime
@@ -78,8 +77,11 @@ def generate_launch_description():
                     {"calibration": False},
                     {"motion_duration": 20.0},
                     {"recalibration_interval": 10.0},
-                    {"flexion_scalar": 0.4},
-                    {"signal_type": "sine"},  # Use "step" if you want step signals, "sine" for sign waves
+                    {"flexion_scalar": 0.4},   
+                    {"signal_type": "sweep"},  # Use "step" if you want step signals, "sine" for sign waves
+                    {"start_frequency": 0.1},
+                    {"stop_frequency": 1.0},
+                    {"sweep_duration": 10.0},
                     {"retarget/hand_scheme": os.path.join(
                         get_package_share_directory("viz"),
                         "models",
@@ -124,9 +126,15 @@ def generate_launch_description():
                 arguments=['-d', os.path.join(get_package_share_directory('viz'), 'rviz', 'retarget_config_orca_v1.rviz')],
                 ),
 
-            ExecuteProcess(
-                cmd=['ros2', 'bag', 'record', '--output', rosbag_output_dir, '/camera/camera/color/image_raw', '/hand/policy_output'],
-                output='screen'
+            # Node to start recording OAK-D camera frames and commanded angles to a rosbag with a delay
+            TimerAction(
+                period=5.0,  # Delay in seconds
+                actions=[
+                    ExecuteProcess(
+                        cmd=['ros2', 'bag', 'record', '--output', rosbag_output_dir, 'image_raw', '/hand/policy_output'],
+                        output='screen'
+                    )
+                ]
             )
         ]
     )

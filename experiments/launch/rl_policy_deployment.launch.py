@@ -17,13 +17,13 @@ def generate_launch_description():
      
     return LaunchDescription([
         
-        #HAND CONTROLLER NODE
-        Node(
-            package="hand_control",
-            executable="hand_control_node.py",
-            name="hand_control_node",
-            output="screen"
-        ),
+        # HAND CONTROLLER NODE
+        # Node(
+        #     package="hand_control",
+        #     executable="hand_control_node.py",
+        #     name="hand_control_node",
+        #     output="screen"
+        # ),
 
         Node(
             package='experiments',
