@@ -53,14 +53,16 @@ class VisionProNode(Node):
         right_fingers = r['right_fingers'] # np.array of shape (25, 4, 4)
         keypoint_positions = right_fingers[:, :3, 3]
         right_wrist_position = right_wrist[:,:3, 3]  
-        assert keypoint_positions.shape == (27, 3), f"Unexpected shape: {keypoint_positions.shape}"
+        assert keypoint_positions.shape == (25, 3), f"Unexpected shape: {keypoint_positions.shape}"
         
-        forearmwrist = keypoint_positions[25] 
-        forearm = keypoint_positions[26]     
+        #forearmwrist = keypoint_positions[25] 
+        #forearm = keypoint_positions[26]     
  
-        keypoint_positions = np.delete(keypoint_positions, [0, 5, 10, 15, 20, 25, 26], axis=0)
-        keypoint_positions = np.insert(keypoint_positions, 0, forearmwrist, axis=0)
-        keypoint_positions = np.insert(keypoint_positions, 0, forearm, axis=0)
+        #keypoint_positions = np.delete(keypoint_positions, [0, 5, 10, 15, 20, 25, 26], axis=0)
+        keypoint_positions = np.delete(keypoint_positions, [5, 10, 15, 20], axis=0)
+
+        keypoint_positions = np.insert(keypoint_positions, 0, keypoint_positions[0], axis=0)
+        #keypoint_positions = np.insert(keypoint_positions, 0, forearm, axis=0)
 
         assert keypoint_positions.shape == (22, 3), f"Unexpected shape: {keypoint_positions.shape}"
         #print(keypoint_positions)
